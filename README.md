@@ -10,7 +10,7 @@ Triggers:
 
 - Pushing a tag that starts with `freeswitch-v` (e.g., `freeswitch-v1.10.12`)
 - Manual dispatch (supports custom version)
-- Changes in the `deploy/freeswitch/docker/` directory
+- Changes in the `docker/` directory
 
 Capabilities:
 

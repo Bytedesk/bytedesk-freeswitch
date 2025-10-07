@@ -5,7 +5,7 @@
 ## 📁 项目结构
 
 ```
-deploy/freeswitch/docker/
+docker/
 ├── Dockerfile                  # Docker 镜像构建文件
 ├── docker-entrypoint.sh       # 容器启动脚本
 ├── docker-compose.yml         # Docker Compose 配置文件
@@ -142,7 +142,7 @@ deploy/freeswitch/docker/
 ### 1. 构建镜像
 
 ```bash
-cd deploy/freeswitch/docker
+cd docker
 ./build.sh
 ```
 

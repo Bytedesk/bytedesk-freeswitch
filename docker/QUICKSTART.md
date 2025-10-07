@@ -14,7 +14,7 @@
 ### 步骤 1: 进入 Docker 目录
 
 ```bash
-cd deploy/freeswitch/docker
+cd docker
 ```
 
 ### 步骤 2: 构建镜像

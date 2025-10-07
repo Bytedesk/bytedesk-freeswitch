@@ -10,7 +10,7 @@ on:
       - 'freeswitch-v*'
     paths:
       # 当以下路径发生变化时触发
-      - 'deploy/freeswitch/docker/**'
+      - 'docker/**'
   workflow_dispatch:
     # 支持手动触发
     inputs:
@@ -117,8 +117,8 @@ jobs:
       - name: Build and push to Aliyun Docker Registry
         uses: docker/build-push-action@v6
         with:
-          context: ./deploy/freeswitch/docker
-          file: ./deploy/freeswitch/docker/Dockerfile
+          context: ./docker
+          file: ./docker/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           push: ${{ github.event.inputs.push_to_registry != 'false' }}
@@ -139,8 +139,8 @@ jobs:
       - name: Build and push to Docker Hub
         uses: docker/build-push-action@v6
         with:
-          context: ./deploy/freeswitch/docker
-          file: ./deploy/freeswitch/docker/Dockerfile
+          context: ./docker
+          file: ./docker/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           platforms: linux/amd64
           push: ${{ github.event.inputs.push_to_registry != 'false' }}
@@ -223,8 +223,8 @@ jobs:
             
             ### 📚 文档
             
-            - [完整文档](https://github.com/${{ github.repository }}/tree/main/deploy/freeswitch/docker/README.md)
-            - [快速开始](https://github.com/${{ github.repository }}/tree/main/deploy/freeswitch/docker/QUICKSTART.md)
+            - [完整文档](https://github.com/${{ github.repository }}/tree/main/docker/README.md)
+            - [快速开始](https://github.com/${{ github.repository }}/tree/main/docker/QUICKSTART.md)
             - [FreeSWITCH 官方文档](https://freeswitch.org/confluence/)
             
             ### 🔗 相关链接
@@ -267,7 +267,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- [Docker Hub](https://hub.docker.com/r/bytedesk/freeswitch)" >> $GITHUB_STEP_SUMMARY
           echo "- [阿里云镜像](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)" >> $GITHUB_STEP_SUMMARY
-          echo "- [使用文档](https://github.com/${{ github.repository }}/tree/main/deploy/freeswitch/docker)" >> $GITHUB_STEP_SUMMARY
+          echo "- [使用文档](https://github.com/${{ github.repository }}/tree/main/docker)" >> $GITHUB_STEP_SUMMARY
 
   # 可选：测试构建的镜像
   test-image:

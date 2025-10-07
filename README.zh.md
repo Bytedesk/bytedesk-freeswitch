@@ -10,7 +10,7 @@
 
 - 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v1.10.12`）
 - 手动触发（支持自定义版本号）
-- `deploy/freeswitch/docker/` 目录变更
+- `docker/` 目录变更
 
 **功能：**
 
