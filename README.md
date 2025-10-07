@@ -8,7 +8,7 @@ This project uses multiple independent GitHub Actions workflows to implement the
 
 Triggers:
 
-- Pushing a tag that starts with `freeswitch-v` (e.g., `freeswitch-v1.10.12`)
+- Pushing a tag that starts with `freeswitch-v` (e.g., `freeswitch-v0.0.8`)
 - Manual dispatch (supports custom version)
 - Changes in the `docker/` directory
 
@@ -33,7 +33,7 @@ Outputs:
 ### FreeSWITCH Image Workflow
 
 ```bash
-Push tag freeswitch-v1.10.12
+Push tag freeswitch-v0.0.8
 or manually trigger the workflow
     ↓
 freeswitch-docker.yml workflow
@@ -77,10 +77,10 @@ git push origin v1.0.0
 
 ```bash
 # Create a FreeSWITCH tag
-git tag freeswitch-v1.10.12
+git tag freeswitch-v0.0.8
 
 # Push the tag
-git push origin freeswitch-v1.10.12
+git push origin freeswitch-v0.0.8
 ```
 
 #### 2. Manually trigger a build (optional)

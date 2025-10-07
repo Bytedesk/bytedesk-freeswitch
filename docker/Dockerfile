@@ -45,7 +45,11 @@ RUN git clone https://github.com/signalwire/signalwire-c && \
     export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && \
     cmake . -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH=/usr/local \
-            -DCMAKE_INSTALL_PREFIX=/usr/local && \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DOPENSSL_ROOT_DIR=/usr \
+            -DOPENSSL_INCLUDE_DIR=/usr/include/openssl \
+            -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libcrypto.so \
+            -DOPENSSL_SSL_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libssl.so && \
     make && make install && \
     ldconfig && \
     cd .. && rm -rf signalwire-c

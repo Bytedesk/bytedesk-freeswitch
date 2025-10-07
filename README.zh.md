@@ -8,7 +8,7 @@
 
 **触发条件：**
 
-- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v1.10.12`）
+- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v0.0.8`）
 - 手动触发（支持自定义版本号）
 - `docker/` 目录变更
 
@@ -33,7 +33,7 @@
 ### FreeSWITCH 镜像工作流
 
 ```bash
-推送标签 freeswitch-v1.10.12
+推送标签 freeswitch-v0.0.8
 或手动触发工作流
     ↓
 freeswitch-docker.yml 工作流
@@ -77,10 +77,10 @@ git push origin v1.0.0
 
 ```bash
 # 创建 FreeSWITCH 标签
-git tag freeswitch-v1.10.12
+git tag freeswitch-v0.0.8
 
 # 推送标签
-git push origin freeswitch-v1.10.12
+git push origin freeswitch-v0.0.8
 ```
 
 #### 2. 手动触发构建（可选）
