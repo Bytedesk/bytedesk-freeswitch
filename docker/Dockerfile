@@ -19,7 +19,7 @@ WORKDIR /root
 # 安装系统依赖
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y \
-    unixodbc-dev mysql-connector-odbc git build-essential automake autoconf libtool libtool-bin python3 \
+    unixodbc-dev odbc-mariadb git build-essential automake autoconf libtool libtool-bin python3 \
     zlib1g-dev libjpeg-dev libncurses5-dev libssl-dev libpcre3-dev libspeexdsp-dev \
     libspeex-dev libcurl4-openssl-dev libopus-dev libsqlite3-dev libldns-dev libedit-dev \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
