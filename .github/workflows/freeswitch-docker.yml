@@ -120,7 +120,7 @@ jobs:
           context: ./docker
           file: ./docker/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event.inputs.push_to_registry != 'false' }}
           tags: |
             ${{ env.ALIYUN_IMAGE_NAME }}:latest
@@ -142,7 +142,7 @@ jobs:
           context: ./docker
           file: ./docker/Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event.inputs.push_to_registry != 'false' }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
@@ -248,7 +248,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **版本**: ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- **FreeSWITCH**: 1.10.12" >> $GITHUB_STEP_SUMMARY
-          echo "- **平台**: linux/amd64" >> $GITHUB_STEP_SUMMARY
+          echo "- **平台**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
           echo "- **构建时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🐳 Docker Hub" >> $GITHUB_STEP_SUMMARY
