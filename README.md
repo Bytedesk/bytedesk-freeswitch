@@ -96,10 +96,10 @@ git push origin freeswitch-v1.10.12
 
 ```bash
 # Pull from Docker Hub
-docker pull bytedesk/freeswitch:1.10.12
+docker pull bytedesk/freeswitch:latest
 
 # Pull from Alibaba Cloud (recommended in Mainland China)
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:1.10.12
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
 
 # Run the container
 docker run -d \
@@ -107,5 +107,5 @@ docker run -d \
   -p 5060:5060/tcp -p 5060:5060/udp \
   -p 8021:8021 \
   -e FREESWITCH_ESL_PASSWORD=bytedesk123 \
-  bytedesk/freeswitch:1.10.12
+  bytedesk/freeswitch:latest
 ```

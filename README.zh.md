@@ -96,10 +96,10 @@ git push origin freeswitch-v1.10.12
 
 ```bash
 # 从 Docker Hub 拉取
-docker pull bytedesk/freeswitch:1.10.12
+docker pull bytedesk/freeswitch:latest
 
 # 从阿里云拉取（中国大陆推荐）
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:1.10.12
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
 
 # 运行容器
 docker run -d \
@@ -107,6 +107,6 @@ docker run -d \
   -p 5060:5060/tcp -p 5060:5060/udp \
   -p 8021:8021 \
   -e FREESWITCH_ESL_PASSWORD=bytedesk123 \
-  bytedesk/freeswitch:1.10.12
+  bytedesk/freeswitch:latest
 ```
 
