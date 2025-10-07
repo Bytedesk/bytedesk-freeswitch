@@ -23,6 +23,7 @@ RUN apt-get update && apt-get upgrade -y && \
     zlib1g-dev libjpeg-dev libncurses5-dev libssl-dev libpcre3-dev libspeexdsp-dev \
     libspeex-dev libcurl4-openssl-dev libopus-dev libsqlite3-dev libldns-dev libedit-dev \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
+    liblua5.3-dev lua5.3 \
     libmariadb-dev libmariadb-dev-compat && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -58,13 +59,7 @@ RUN git clone https://github.com/freeswitch/spandsp && \
     make && make install && \
     cd .. && rm -rf spandsp
 
-# 编译安装 Lua 5.3.0
-RUN curl -R -O http://www.lua.org/ftp/lua-5.3.0.tar.gz && \
-    tar xf lua-5.3.0.tar.gz && \
-    cd lua-5.3.0 && \
-    make MYCFLAGS="-fPIC" linux && \
-    make install && \
-    cd .. && rm -rf lua-5.3.0 lua-5.3.0.tar.gz
+# 使用系统提供的 Lua 5.3（通过 apt 安装），无需从源码编译
 
 # 编译安装 libav
 RUN git clone -b release/12 https://github.com/libav/libav.git && \
