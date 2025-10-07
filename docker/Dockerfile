@@ -25,21 +25,29 @@ RUN apt-get update && apt-get upgrade -y && \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
     libsndfile1-dev \
     liblua5.3-dev lua5.3 \
-    libmariadb-dev libmariadb-dev-compat && \
+    libmariadb-dev libmariadb-dev-compat \
+    libssl-dev libcrypto++-dev libgnutls28-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 编译安装 libks
 RUN git clone https://github.com/signalwire/libks.git && \
     cd libks && \
-    cmake . && \
+    cmake . -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local && \
     make && make install && \
+    ldconfig && \
     cd .. && rm -rf libks
 
 # 编译安装 signalwire-c
 RUN git clone https://github.com/signalwire/signalwire-c && \
     cd signalwire-c && \
-    cmake . && \
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:$PKG_CONFIG_PATH && \
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && \
+    cmake . -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=/usr/local \
+            -DCMAKE_INSTALL_PREFIX=/usr/local && \
     make && make install && \
+    ldconfig && \
     cd .. && rm -rf signalwire-c
 
 # 编译安装 sofia-sip
