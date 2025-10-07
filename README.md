@@ -70,24 +70,6 @@ git push origin v1.0.0
 ### 2. Monitor deployment status
 
 1. Check the workflow run status on the repository’s Actions page
-2. Wait for `bytedesk.yml` to complete
-3. Observe `deploy-k8s.yml` automatically start and run
-
-#### 3. Verify the deployment
-
-```bash
-# Check Pod status
-kubectl get pods -n bytedesk
-
-# Check service status
-kubectl get svc -n bytedesk
-
-# Check deployment status
-kubectl get deployment -n bytedesk
-
-# View logs
-kubectl logs -f deployment/bytedesk -n bytedesk
-```
 
 ### FreeSWITCH Image Release Flow
 
@@ -127,58 +109,3 @@ docker run -d \
   -e FREESWITCH_ESL_PASSWORD=bytedesk123 \
   bytedesk/freeswitch:1.10.12
 ```
-
-## Advantages
-
-### Benefits of the separation design
-
-1. Modularity: build and deployment are separated, making maintenance easier
-2. Flexibility: build and deployment flows can be controlled independently
-3. Reusability: the deployment workflow can be triggered by other build workflows
-4. Fault isolation: build failures won’t affect deployment configuration
-5. Parallel processing: multiple builds can run concurrently while deployments execute sequentially
-
-### Automation advantages
-
-1. Zero-downtime deployment: Kubernetes rolling updates
-2. Versioning: automatically uses Git tags as image versions
-3. Health checks: automatically verify application status after deployment
-4. Rollback support: quickly roll back to previous versions
-
-## Troubleshooting
-
-### Build failures
-
-- Check whether Maven dependencies are correct
-- Verify image registry credentials
-- Inspect specific errors in the build logs
-
-### Deployment failures
-
-- Verify Kubernetes cluster configuration
-- Check cluster resources
-- Look at Pod events and logs
-- Confirm image registry accessibility
-
-### Common issues
-
-1. Insufficient permissions: ensure the ServiceAccount has enough permissions
-2. Insufficient resources: check CPU and memory availability
-3. Network issues: verify cluster networking
-4. Image pull failed: verify the image tag and registry access
-
-## Enhancement Suggestions
-
-### Features you can add
-
-1. Multi-environment deployments: separate workflows for dev/staging/prod
-2. Notification integration: add Slack/DingTalk notifications
-3. Performance testing: run performance tests after deployment
-4. Security scanning: integrate container security scans
-5. Backup strategy: automatically back up data before deployment
-
-### Monitoring and logging
-
-1. Prometheus monitoring: integrate application metrics
-2. ELK logging: centralized log management
-3. Alerting: set alerts for key metrics
