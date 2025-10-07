@@ -1,0 +1,34 @@
+<!-- FreeSwitch ODBC配置 - 连接MySQL数据库 -->
+<configuration name="odbc.conf" description="ODBC Configuration">
+  <settings>
+    <!-- 
+    MySQL连接配置 
+    使用与Bytedesk应用相同的数据库连接信息
+    -->
+    <param name="max-connections" value="25"/>
+    <param name="pre-connect" value="true"/>
+    
+    <!-- MySQL数据源配置 -->
+    <param name="enable-pool-events" value="false"/>
+  </settings>
+  
+  <!-- 数据库连接池 -->
+  <databases>
+    <!-- Bytedesk MySQL数据库连接 -->
+    <database name="bytedesk_mysql">
+      <!-- MySQL ODBC连接字符串 -->
+      <param name="dsn" value="mysql:host=124.220.58.234;port=3306;database=bytedesk;uid=root;pwd=nDWXYLK6QQTr"/>
+      <!-- 或者使用标准ODBC DSN格式 -->
+      <!-- <param name="dsn" value="DRIVER={MySQL ODBC 8.0 ANSI Driver};SERVER=124.220.58.234;PORT=3306;DATABASE=bytedesk;UID=root;PWD=nDWXYLK6QQTr;CHARSET=utf8mb4"/> -->
+      
+      <!-- 连接池设置 -->
+      <param name="max-connections" value="25"/>
+      <param name="pre-connect" value="5"/>
+      
+      <!-- 连接选项 -->
+      <param name="auto-commit" value="true"/>
+      <param name="connection-timeout" value="10"/>
+      <param name="query-timeout" value="30"/>
+    </database>
+  </databases>
+</configuration>

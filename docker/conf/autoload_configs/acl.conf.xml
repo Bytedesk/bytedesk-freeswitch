@@ -1,0 +1,133 @@
+<configuration name="acl.conf" description="Network Lists">
+  <network-lists>
+    <!--
+	 These ACL's are automatically created on startup.
+
+	 rfc1918.auto  - RFC1918 Space
+	 nat.auto      - RFC1918 Excluding your local lan.
+	 localnet.auto - ACL for your local lan.
+	 loopback.auto - ACL for your local lan.
+    -->
+
+    <!-- 原有LAN配置 -->
+    <list name="lan" default="allow">
+      <node type="deny" cidr="192.168.42.0/24" />
+      <node type="allow" cidr="192.168.42.42/32" />
+    </list>
+
+    <!-- 新增：允许Bytedesk应用程序连接的ACL -->
+    <list name="bytedesk_allowed" default="deny">
+      <!-- 显式阻止已知恶意来源（优先级高于 allow） -->
+      <node type="deny" cidr="103.195.100.135/32" />
+      <node type="deny" cidr="81.16.177.161/32" />
+      <node type="deny" cidr="213.170.135.210/32" />
+      <node type="deny" cidr="216.246.109.158/32" />
+      <node type="deny" cidr="192.210.184.18/32" />
+      <node type="deny" cidr="63.141.224.186/32" />
+      <node type="deny" cidr="185.243.5.193/32" />
+      <node type="deny" cidr="23.95.182.242/32" />
+      <node type="deny" cidr="217.154.203.209/32" />
+      <node type="deny" cidr="87.98.242.75/32" />
+      <!-- 新增：根据日志统计的高频来源IP -->
+      <node type="deny" cidr="23.94.82.250/32" />
+      <node type="deny" cidr="144.172.103.41/32" />
+      <node type="deny" cidr="87.255.195.66/32" />
+      <node type="deny" cidr="38.107.88.82/32" />
+      <node type="deny" cidr="194.213.3.48/32" />
+      <!-- 新增：最近日志出现的来源IP（扫描/攻击） -->
+      <node type="deny" cidr="65.60.34.138/32" />
+      <node type="deny" cidr="159.65.25.66/32" />
+      <node type="deny" cidr="137.184.84.112/32" />
+      <!-- 新增：日志中零散出现的来源IP -->
+      <node type="deny" cidr="198.23.190.58/32" />
+      <node type="deny" cidr="119.8.1.116/32" />
+      <node type="deny" cidr="91.208.92.186/32" />
+      <node type="deny" cidr="212.83.173.254/32" />
+      <node type="deny" cidr="193.24.123.88/32" />
+      <node type="deny" cidr="192.3.140.22/32" />
+      <node type="deny" cidr="185.243.5.103/32" />
+      
+      <!-- 允许本地连接 -->
+      <node type="allow" cidr="127.0.0.0/8" />
+      <node type="allow" cidr="::1/128" />
+
+      <!-- 允许局域网连接 -->
+      <node type="allow" cidr="192.168.0.0/16" />
+      <node type="allow" cidr="10.0.0.0/8" />
+      <node type="allow" cidr="172.16.0.0/12" />
+
+      <!-- 允许特定的外部IP (请根据实际需要调整) -->
+      <!-- 如果Java应用程序在特定的公网IP上运行，请在这里添加 -->
+      <!-- <node type="allow" cidr="103.46.244.83/32"/> -->
+
+      <!-- 注意：严禁在生产环境中配置 0.0.0.0/0 放行。需按需添加具体的公网IP/CIDR 到 allow 列表。 -->
+      <node type="allow" cidr="0.0.0.0/0" />
+      <!-- <node type="allow" cidr="122.191.157.0/24" /> -->
+
+    </list>
+
+    <!-- WebRTC允许的IP列表 -->
+    <list name="allowed_ips" default="deny">
+      <!-- 允许本地连接 -->
+      <node type="allow" cidr="127.0.0.0/8" />
+      <node type="allow" cidr="::1/128" />
+
+      <!-- 允许局域网连接 -->
+      <node type="allow" cidr="192.168.0.0/16" />
+      <node type="allow" cidr="10.0.0.0/8" />
+      <node type="allow" cidr="172.16.0.0/12" />
+
+      <!-- 允许您的测试IP -->
+      <node type="allow" cidr="120.221.12.44/32" />
+
+      <!-- 不要使用 0.0.0.0/0 放行，确保仅有明确的白名单 IP 可以访问。 -->
+    </list>
+
+    <!-- WebRTC阻止的IP列表 -->
+    <list name="blocked_ips" default="allow">
+      <!-- 显式阻止以下来源IP -->
+      <node type="deny" cidr="103.195.100.135/32" />
+      <node type="deny" cidr="81.16.177.161/32" />
+      <node type="deny" cidr="213.170.135.210/32" />
+      <node type="deny" cidr="216.246.109.158/32" />
+      <node type="deny" cidr="192.210.184.18/32" />
+      <node type="deny" cidr="63.141.224.186/32" />
+      <node type="deny" cidr="185.243.5.193/32" />
+      <node type="deny" cidr="23.95.182.242/32" />
+      <node type="deny" cidr="217.154.203.209/32" />
+      <node type="deny" cidr="87.98.242.75/32" />
+      <!-- 新增：根据日志统计的高频来源IP -->
+      <node type="deny" cidr="23.94.82.250/32" />
+      <node type="deny" cidr="144.172.103.41/32" />
+      <node type="deny" cidr="87.255.195.66/32" />
+      <node type="deny" cidr="38.107.88.82/32" />
+      <node type="deny" cidr="194.213.3.48/32" />
+      <!-- 新增：最近日志出现的来源IP（扫描/攻击） -->
+      <node type="deny" cidr="65.60.34.138/32" />
+      <node type="deny" cidr="159.65.25.66/32" />
+      <node type="deny" cidr="137.184.84.112/32" />
+      <!-- 新增：日志中零散出现的来源IP -->
+      <node type="deny" cidr="198.23.190.58/32" />
+      <node type="deny" cidr="119.8.1.116/32" />
+      <node type="deny" cidr="91.208.92.186/32" />
+      <node type="deny" cidr="212.83.173.254/32" />
+      <node type="deny" cidr="193.24.123.88/32" />
+      <node type="deny" cidr="192.3.140.22/32" />
+      <node type="deny" cidr="185.243.5.103/32" />
+    </list>
+
+    <!--
+	This will traverse the directory adding all users
+	with the cidr= tag to this ACL, when this ACL matches
+	the users variables and params apply as if they
+	digest authenticated.
+    -->
+    <list name="domains" default="deny">
+      <!-- domain= is special it scans the domain from the directory to build the ACL -->
+      <node type="allow" domain="$${domain}" />
+      <!-- use cidr= if you wish to allow ip ranges to this domains acl. -->
+      <!-- <node type="allow" cidr="192.168.0.0/24"/> -->
+    </list>
+
+  </network-lists>
+</configuration>

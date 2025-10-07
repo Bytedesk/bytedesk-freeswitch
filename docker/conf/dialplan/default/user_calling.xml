@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<include>
+  <context name="default">
+    
+    <!-- User-to-User Calling Extension -->
+    <extension name="user_calling" continue="true">
+      <condition field="destination_number" expression="^(100[0-9]|200[0-9]|300[0-9]|400[0-9]|500[0-9]|600[0-9]|700[0-9]|800[0-9]|900[0-9])$">
+        <action application="log" data="INFO User calling: ${caller_id_number} -> ${destination_number}"/>
+        <action application="set" data="call_timeout=60"/>
+        <action application="set" data="hangup_after_bridge=true"/>
+        <action application="set" data="continue_on_fail=true"/>
+        <action application="set" data="bridge_export" value="rtp_timeout_sec=300"/>
+        <action application="set" data="bridge_export" value="rtp_hold_timeout_sec=1800"/>
+        <action application="bridge" data="user/${destination_number}@${domain_name}"/>
+      </condition>
+    </extension>
+    
+    <!-- Echo Test Extension -->
+    <extension name="echo_test">
+      <condition field="destination_number" expression="^9196$">
+        <action application="answer"/>
+        <action application="set" data="hangup_after_bridge=false"/>
+        <action application="echo"/>
+      </condition>
+    </extension>
+    
+  </context>
+</include>

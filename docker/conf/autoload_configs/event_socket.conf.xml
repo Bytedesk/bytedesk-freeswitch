@@ -1,0 +1,21 @@
+<configuration name="event_socket.conf" description="Socket Client">
+  <settings>
+    <param name="nat-map" value="false"/>
+    <param name="listen-ip" value="0.0.0.0"/>
+    <param name="listen-port" value="8021"/>
+    <param name="password" value="bytedesk123"/>
+    
+    <!-- 修复访问控制问题 - 允许特定IP或移除ACL限制 -->
+    <!-- 选项1: 允许所有连接 (不推荐用于生产环境) -->
+    <!-- <param name="apply-inbound-acl" value=""/> -->
+    
+    <!-- 选项2: 创建自定义ACL允许特定IP范围 -->
+    <param name="apply-inbound-acl" value="bytedesk_allowed"/>
+    
+    <!-- 选项3: 只允许本地和局域网 (当前配置) -->
+    <!-- <param name="apply-inbound-acl" value="loopback.auto"/> -->
+    <!-- <param name="apply-inbound-acl" value="lan"/> -->
+    
+    <!--<param name="stop-on-bind-error" value="true"/>-->
+  </settings>
+</configuration>

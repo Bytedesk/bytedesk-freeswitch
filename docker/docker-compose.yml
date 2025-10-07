@@ -1,0 +1,136 @@
+# FreeSWITCH Docker Compose Configuration
+# 用于单独运行 FreeSWITCH 服务
+
+version: '3.8'
+
+services:
+  freeswitch:
+    image: bytedesk/freeswitch:1.10.12
+    container_name: freeswitch-bytedesk
+    restart: always
+    
+    # 端口映射
+    ports:
+      # SIP 端口
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5080:5080/tcp"
+      - "5080:5080/udp"
+      - "5061:5061/tcp"   # SIP TLS
+      - "5081:5081/tcp"   # SIP TLS
+      
+      # WebRTC 端口
+      - "5066:5066/tcp"   # WebSocket
+      - "7443:7443/tcp"   # WSS
+      
+      # ESL 管理端口
+      - "8021:8021/tcp"
+      
+      # RTP 媒体端口范围
+      - "16384-32768:16384-32768/udp"
+      
+      # STUN 端口 (可选)
+      - "3478:3478/udp"
+      - "3479:3479/udp"
+      
+      # HTTP 服务端口 (可选)
+      - "8081:8081/tcp"
+      - "8082:8082/tcp"
+    
+    # 环境变量配置
+    environment:
+      # ESL 密码 (必填)
+      - FREESWITCH_ESL_PASSWORD=bytedesk123
+      
+      # SIP 域名 (替换为您的域名或 IP)
+      - FREESWITCH_DOMAIN=localhost
+      
+      # 外部 IP 地址 (用于 NAT 穿透，生产环境必填)
+      # - FREESWITCH_EXTERNAL_IP=your-public-ip
+      
+      # RTP 端口范围
+      - FREESWITCH_RTP_START=16384
+      - FREESWITCH_RTP_END=32768
+      
+      # 数据库配置 (可选，用于数据持久化)
+      # - FREESWITCH_DB_HOST=mysql
+      # - FREESWITCH_DB_NAME=freeswitch
+      # - FREESWITCH_DB_USER=freeswitch
+      # - FREESWITCH_DB_PASSWORD=freeswitch_password
+      # - FREESWITCH_DB_PORT=3306
+      
+      # 时区设置
+      - TZ=Asia/Shanghai
+    
+    # 数据卷挂载
+    volumes:
+      # 配置文件目录 (可选)
+      # - ./conf:/usr/local/freeswitch/conf
+      
+      # 日志目录
+      - freeswitch_log:/usr/local/freeswitch/log
+      
+      # 数据库目录
+      - freeswitch_db:/usr/local/freeswitch/db
+      
+      # 录音文件目录
+      - freeswitch_recordings:/usr/local/freeswitch/recordings
+      
+      # 存储目录
+      - freeswitch_storage:/usr/local/freeswitch/storage
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "fs_cli", "-p", "bytedesk123", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+    
+    # 网络模式
+    networks:
+      - freeswitch-network
+
+  # MySQL 数据库 (可选，用于 FreeSWITCH 数据持久化)
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: freeswitch-mysql
+  #   restart: always
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=root_password
+  #     - MYSQL_DATABASE=freeswitch
+  #     - MYSQL_USER=freeswitch
+  #     - MYSQL_PASSWORD=freeswitch_password
+  #     - TZ=Asia/Shanghai
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - freeswitch-network
+
+# 数据卷定义
+volumes:
+  freeswitch_log:
+    name: freeswitch_log
+  freeswitch_db:
+    name: freeswitch_db
+  freeswitch_recordings:
+    name: freeswitch_recordings
+  freeswitch_storage:
+    name: freeswitch_storage
+  # mysql_data:
+  #   name: freeswitch_mysql_data
+
+# 网络定义
+networks:
+  freeswitch-network:
+    driver: bridge
+    name: freeswitch-network

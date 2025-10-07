@@ -1,0 +1,14 @@
+<configuration name="db.conf" description="LIMIT DB Configuration">
+  <settings>
+    <!-- Bytedesk MySQL数据库连接 -->
+    <param name="odbc-dsn" value="mysql:host=124.220.58.234;port=3306;database=bytedesk;uid=root;pwd=nDWXYLK6QQTr;charset=utf8mb4"/>
+    
+    <!-- 连接池设置 -->
+    <param name="max-connections" value="25"/>
+    <param name="pre-connect" value="5"/>
+    
+    <!-- 连接超时设置 -->
+    <param name="connection-timeout" value="10"/>
+    <param name="query-timeout" value="30"/>
+  </settings>
+</configuration>
