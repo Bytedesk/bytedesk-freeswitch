@@ -106,6 +106,6 @@ docker run -d \
   --name freeswitch-bytedesk \
   -p 5060:5060/tcp -p 5060:5060/udp \
   -p 8021:8021 \
-  -e FREESWITCH_ESL_PASSWORD=bytedesk123 \
+  -e FREESWITCH_ESL_PASSWORD=password \
   bytedesk/freeswitch:latest
 ```
