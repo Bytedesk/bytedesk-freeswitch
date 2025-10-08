@@ -24,42 +24,6 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# ============================================
-# 修复 IPv6 问题
-# ============================================
-log_info "Disabling IPv6 configurations..."
-
-# 1. 删除 IPv6 相关的 SIP profiles
-if [ -d "${FREESWITCH_PREFIX}/conf/sip_profiles/internal-ipv6" ]; then
-    log_info "Removing internal-ipv6 directory..."
-    rm -rf ${FREESWITCH_PREFIX}/conf/sip_profiles/internal-ipv6
-fi
-
-if [ -d "${FREESWITCH_PREFIX}/conf/sip_profiles/external-ipv6" ]; then
-    log_info "Removing external-ipv6 directory..."
-    rm -rf ${FREESWITCH_PREFIX}/conf/sip_profiles/external-ipv6
-fi
-
-# 2. 删除 IPv6 XML 配置文件
-rm -f ${FREESWITCH_PREFIX}/conf/sip_profiles/internal-ipv6.xml 2>/dev/null || true
-rm -f ${FREESWITCH_PREFIX}/conf/sip_profiles/external-ipv6.xml 2>/dev/null || true
-rm -f ${FREESWITCH_PREFIX}/conf/sip_profiles/internal-ipv6.xml.deactive 2>/dev/null || true
-rm -f ${FREESWITCH_PREFIX}/conf/sip_profiles/external-ipv6.xml.deactive 2>/dev/null || true
-
-# 3. 确保 event_socket 只监听 IPv4
-log_info "Configuring event_socket for IPv4 only..."
-if [ -f "${FREESWITCH_PREFIX}/conf/autoload_configs/event_socket.conf.xml" ]; then
-    # 替换任何 :: 为 0.0.0.0
-    sed -i 's/listen-ip" value="::"/listen-ip" value="0.0.0.0"/g' \
-        ${FREESWITCH_PREFIX}/conf/autoload_configs/event_socket.conf.xml
-fi
-
-log_info "IPv6 configurations disabled successfully"
-
-# ============================================
-# 原有配置逻辑
-# ============================================
-
 # 配置 ESL 密码
 if [ -n "$FREESWITCH_ESL_PASSWORD" ]; then
     log_info "Setting ESL password..."
@@ -130,7 +94,6 @@ log_info "  - ESL Port: 8021"
 log_info "  - SIP Ports: 5060, 5080"
 log_info "  - WebRTC Port: 7443"
 log_info "  - RTP Ports: 16384-32768"
-log_info "  - IPv6: DISABLED"
 
 # 启动 FreeSWITCH
 log_info "Starting FreeSWITCH..."
@@ -139,6 +102,5 @@ log_info "Starting FreeSWITCH..."
 if [ "$#" -gt 0 ]; then
     exec "$@"
 else
-    # 使用 -nf (no fork) 保持前台运行，适合 Docker
-    exec freeswitch -nf -nonat
+    exec freeswitch -nc -nonat -nf
 fi
