@@ -12,6 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FREESWITCH_VERSION=v1.10.12
 ENV FREESWITCH_PREFIX=/usr/local/freeswitch
 ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 # 设置工作目录
 WORKDIR /root
@@ -68,8 +69,9 @@ RUN git clone https://github.com/freeswitch/spandsp && \
     cd spandsp && \
     git checkout -b finecode20230705 0d2e6ac65e0e8f53d652665a743015a88bf048d4 && \
     ./bootstrap.sh && \
-    ./configure && \
+    ./configure --prefix=/usr/local && \
     make && make install && \
+    ldconfig && \
     cd .. && rm -rf spandsp
 
 # 使用系统提供的 Lua 5.3（通过 apt 安装），无需从源码编译
@@ -103,6 +105,9 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     make mod_mariadb && \
     make mod_mariadb-install && \
     cd .. && rm -rf freeswitch
+
+# 确保所有共享库都被正确链接
+RUN ldconfig
 
 # 创建符号链接
 RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \
