@@ -12,7 +12,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FREESWITCH_VERSION=v1.10.12
 ENV FREESWITCH_PREFIX=/usr/local/freeswitch
 ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+# Initialize LD_LIBRARY_PATH safely (avoid undefined var warning under BuildKit)
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
+
+# Optional build of signalwire-c (mod_signalwire dependency). Disabled by default because
+# it intermittently segfaults under QEMU emulation for arm64 multi-arch builds.
+# Set at build time with: --build-arg BUILD_SIGNALWIRE=1
+ARG BUILD_SIGNALWIRE=0
 
 # 设置工作目录
 WORKDIR /root
@@ -39,21 +45,28 @@ RUN git clone https://github.com/signalwire/libks.git && \
     ldconfig && \
     cd .. && rm -rf libks
 
-# 编译安装 signalwire-c
-RUN git clone https://github.com/signalwire/signalwire-c && \
-    cd signalwire-c && \
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:$PKG_CONFIG_PATH && \
-    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH && \
-    cmake . -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH=/usr/local \
-            -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DOPENSSL_ROOT_DIR=/usr \
-            -DOPENSSL_INCLUDE_DIR=/usr/include/openssl \
-            -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libcrypto.so \
-            -DOPENSSL_SSL_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libssl.so && \
-    make && make install && \
-    ldconfig && \
-    cd .. && rm -rf signalwire-c
+# 可选：编译安装 signalwire-c（仅当需要 mod_signalwire 时启用）
+RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
+            echo "Building signalwire-c (BUILD_SIGNALWIRE=1)"; \
+            git clone --depth 1 https://github.com/signalwire/signalwire-c && \
+            cd signalwire-c && \
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
+            export LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-} && \
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+                        -DCMAKE_PREFIX_PATH=/usr/local \
+                        -DCMAKE_INSTALL_PREFIX=/usr/local \
+                        -DBUILD_TESTING=OFF \
+                        -DOPENSSL_ROOT_DIR=/usr \
+                        -DOPENSSL_INCLUDE_DIR=/usr/include/openssl \
+                        -DOPENSSL_CRYPTO_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libcrypto.so \
+                        -DOPENSSL_SSL_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libssl.so && \
+            cmake --build build -- -j"$(nproc)" && \
+            cmake --install build && \
+            ldconfig && \
+            cd .. && rm -rf signalwire-c; \
+        else \
+            echo "Skipping signalwire-c build (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+        fi
 
 # 编译安装 sofia-sip
 RUN git clone https://github.com/freeswitch/sofia-sip.git && \
