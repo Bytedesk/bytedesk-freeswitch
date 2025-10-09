@@ -93,6 +93,13 @@ docker run -d \
 - ✅ 支持多架构（amd64/arm64）
 - ❌ mod_verto 已禁用（改用 SIP over WebSocket）
 
+## 与官方镜像对比
+
+- 官方镜像：safarov/freeswitch — 仅支持 amd64 架构（查看标签 → https://hub.docker.com/r/safarov/freeswitch/tags）
+- 本镜像：bytedesk/freeswitch — 同时支持 amd64 与 arm64 多架构（查看标签 → https://hub.docker.com/r/bytedesk/freeswitch/tags）
+
+提示：多架构镜像可在 x86_64 服务器与 Apple Silicon（M1/M2/M3）等 ARM 设备上直接运行，无需手动切换镜像。
+
 ## 安装方式
 
 ### 方式一：Docker Run

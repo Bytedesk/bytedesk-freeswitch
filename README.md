@@ -93,6 +93,13 @@ docker run -d \
 - ✅ Multi-architecture support (amd64/arm64)
 - ❌ mod_verto disabled (use SIP over WebSocket instead)
 
+## Comparison with "Official" Image
+
+- safarov/freeswitch — supports amd64 only (see tags → https://hub.docker.com/r/safarov/freeswitch/tags)
+- bytedesk/freeswitch — supports both amd64 and arm64 (see tags → https://hub.docker.com/r/bytedesk/freeswitch/tags)
+
+Tip: Multi-arch images run natively on x86_64 servers and ARM devices like Apple Silicon (M1/M2/M3) without manual image switching.
+
 ## Installation
 
 ### Method 1: Docker Run
