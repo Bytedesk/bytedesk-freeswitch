@@ -36,18 +36,14 @@ RUN apt-get update && apt-get upgrade -y && \
     libssl-dev libcrypto++-dev libgnutls28-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 编译安装 libks（仅当需要 signalwire 支持时）
-RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
-            echo "Building libks (required for mod_signalwire)"; \
-            git clone --depth 1 https://github.com/signalwire/libks.git && \
-            cd libks && \
-            cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
-            make -j"$(nproc)" && make install && \
-            ldconfig && \
-            cd .. && rm -rf libks; \
-        else \
-            echo "Skipping libks (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
-        fi
+# 编译安装 libks（mod_verto 及部分现代模块需要；保持始终构建）
+RUN echo "Building libks (required for mod_verto; signalwire-c remains optional)" && \
+    git clone --depth 1 https://github.com/signalwire/libks.git && \
+    cd libks && \
+    cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    make -j"$(nproc)" && make install && \
+    ldconfig && \
+    cd .. && rm -rf libks
 
 # 可选：编译安装 signalwire-c（仅当需要 mod_signalwire 时启用）
 RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
