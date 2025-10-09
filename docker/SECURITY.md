@@ -446,4 +446,4 @@ docker exec freeswitch grep "REGISTER" /usr/local/freeswitch/log/freeswitch.log 
 ---
 
 **最后更新**: 2025-10-09  
-**维护者**: ByteDesk <support@bytedesk.com>
+**维护者**: ByteDesk <270580156@qq.com>

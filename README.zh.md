@@ -212,34 +212,53 @@ docker compose up -d
 
 ### 自定义配置文件
 
-容器内置的 FreeSWITCH 配置位于 `/usr/local/freeswitch/conf`。如需加载自定义 XML 文件：
+#### 重要：配置文件路径说明
+
+**FreeSWITCH 实际使用的配置路径**: `/usr/local/freeswitch/etc/freeswitch`
+
+容器内虽然同时存在两个配置目录：
+- `/usr/local/freeswitch/etc/freeswitch` - ✅ **运行时实际使用**（正确的挂载路径）
+- `/usr/local/freeswitch/conf` - ❌ 备用目录（不被FreeSWITCH进程读取）
+
+**验证方法**：
+```bash
+# 在容器内验证当前使用的配置路径
+docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
+# 输出: /usr/local/freeswitch/etc/freeswitch
+```
+
+#### 配置自定义XML文件步骤
 
 1. **导出默认配置：**
 
    ```bash
    mkdir -p ./freeswitch-conf
    docker run --rm bytedesk/freeswitch:latest \
-     tar -C /usr/local/freeswitch/conf -cf - . | tar -C ./freeswitch-conf -xf -
+     tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
    ```
 
 2. **在本地编辑 XML 文件：**
    - `vars.xml` & `sip_profiles/internal.xml` - SIP 域名、端口、编解码
    - `autoload_configs/switch.conf.xml` - RTP 端口、核心数据库
    - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` - 数据库 DSN
+   - `autoload_configs/event_socket.conf.xml` - ESL配置
 
-3. **挂载自定义配置：**
+3. **挂载自定义配置（使用正确路径）：**
 
    ```bash
    docker run -d \
      --name freeswitch \
-     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/conf \
+     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/etc/freeswitch \
      -p 5060:5060/tcp -p 5060:5060/udp \
      -p 8021:8021 \
      -e FREESWITCH_ESL_PASSWORD=password \
      bytedesk/freeswitch:latest
    ```
 
-> ℹ️ **注意**: 镜像中包含 `/usr/local/freeswitch/etc/freeswitch`（源于上游安装），但运行时 FreeSWITCH 仅读取 `/usr/local/freeswitch/conf`。始终使用此路径进行自定义配置。
+> ⚠️ **关键提示**: 
+> - 必须挂载到 `/usr/local/freeswitch/etc/freeswitch` 路径，这是FreeSWITCH运行时实际读取的配置目录
+> - 如果挂载到 `/usr/local/freeswitch/conf` 路径，FreeSWITCH将无法读取自定义配置，可能导致ESL连接失败等问题
+> - 使用 `fs_cli -x 'global_getvar conf_dir'` 命令可验证当前配置路径
 
 ## 环境变量
 
@@ -501,15 +520,27 @@ docker exec -it freeswitch fs_cli -p 您的ESL密码
 - **9195**: 回音测试（5秒延迟）
 - **9664**: 保持音乐
 
+### 5. 验证配置路径
+
+如果遇到配置相关问题（例如 ESL 连接失败），请验证配置路径：
+
+```bash
+# 运行验证脚本
+./docker/verify_config_path.sh
+```
+
+这将确认 FreeSWITCH 实际使用的配置目录并提供挂载建议。
+
 ## 文档
 
 ### 主要文档
 
 - **[安全指南](docker/SECURITY.md)** - 🔒 详细的安全配置（必读）
-- **[快速开始指南](docker/QUICKSTART.md)** - 快速设置指南
-- **[构建与部署指南](docker/BUILD_AND_DEPLOY.md)** - 构建和部署说明
-- **[密码配置指南](docker/PASSWORD_UPDATE.md)** - 密码管理指南
-- **[推送指南](docker/PUSH_GUIDE.md)** - 镜像推送指南
+- **[Docker 文档](docker/README.md)** - 🐳 Docker 相关文档和快速链接
+
+### 工具脚本
+
+- **[配置路径验证脚本](docker/verify_config_path.sh)** - 自动验证配置路径的工具
 
 ### 配置文件
 
@@ -540,6 +571,7 @@ docker exec -it freeswitch fs_cli -p 您的ESL密码
 1. 验证端口 8021 已暴露
 2. 检查 ESL 密码
 3. 查看防火墙设置
+4. **验证配置路径**：运行 `./docker/verify_config_path.sh` 确保挂载到正确的路径（`/usr/local/freeswitch/etc/freeswitch`）
 
 ### 音频问题
 
@@ -570,7 +602,7 @@ docker exec -it freeswitch fs_cli -p 您的ESL密码
 
 ## 技术支持
 
-- **邮箱**: support@bytedesk.com
+- **邮箱**: 270580156@qq.com
 - **GitHub Issues**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
 - **文档**: https://docs.bytedesk.com/
 

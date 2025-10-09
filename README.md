@@ -67,34 +67,53 @@ docker compose up -d
 
 ### Custom Configuration Files
 
-The container ships with a full FreeSWITCH configuration under `/usr/local/freeswitch/conf`. To run with your own XML files:
+#### Important: Configuration Path Information
+
+**FreeSWITCH actual configuration path**: `/usr/local/freeswitch/etc/freeswitch`
+
+The container contains two configuration directories:
+- `/usr/local/freeswitch/etc/freeswitch` - ✅ **Actually used at runtime** (correct mount path)
+- `/usr/local/freeswitch/conf` - ❌ Backup directory (not read by FreeSWITCH process)
+
+**Verification method**:
+```bash
+# Verify the actual configuration path in the container
+docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
+# Output: /usr/local/freeswitch/etc/freeswitch
+```
+
+#### Steps to Configure Custom XML Files
 
 1. **Export default configuration:**
 
    ```bash
    mkdir -p ./freeswitch-conf
    docker run --rm bytedesk/freeswitch:latest \
-     tar -C /usr/local/freeswitch/conf -cf - . | tar -C ./freeswitch-conf -xf -
+     tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
    ```
 
 2. **Edit XML files locally:**
-   - `vars.xml` & `sip_profiles/internal.xml` - domains, ports, codecs
-   - `autoload_configs/switch.conf.xml` - RTP range, core DB
-   - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` - Database DSNs
+   - `vars.xml` & `sip_profiles/internal.xml` - SIP domains, ports, codecs
+   - `autoload_configs/switch.conf.xml` - RTP port range, core database
+   - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` - Database DSN
+   - `autoload_configs/event_socket.conf.xml` - ESL configuration
 
-3. **Mount custom configuration:**
+3. **Mount custom configuration (use correct path):**
 
    ```bash
    docker run -d \
      --name freeswitch \
-     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/conf \
+     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/etc/freeswitch \
      -p 5060:5060/tcp -p 5060:5060/udp \
      -p 8021:8021 \
      -e FREESWITCH_ESL_PASSWORD=password \
      bytedesk/freeswitch:latest
    ```
 
-> ℹ️ **Note**: The image contains `/usr/local/freeswitch/etc/freeswitch` from the upstream install, but runtime FreeSWITCH reads configuration exclusively from `/usr/local/freeswitch/conf`. Always use this path for custom configurations.
+> ⚠️ **Critical Notice**: 
+> - You MUST mount to `/usr/local/freeswitch/etc/freeswitch` path, this is the actual configuration directory FreeSWITCH reads at runtime
+> - If you mount to `/usr/local/freeswitch/conf` path, FreeSWITCH will not read the custom configuration, which may cause issues like ESL connection failure
+> - Use `fs_cli -x 'global_getvar conf_dir'` command to verify the current configuration path
 
 ## Environment Variables
 
@@ -519,15 +538,27 @@ Use [LinPhone](https://www.linphone.org/en/download/) or [Zoiper](https://www.zo
 - **9195**: Echo test (5-second delay)
 - **9664**: Music on hold
 
+### 5. Verify Configuration Path
+
+If you encounter configuration-related issues (e.g., ESL connection failures), verify the configuration path:
+
+```bash
+# Run the verification script
+./docker/verify_config_path.sh
+```
+
+This will confirm which configuration directory FreeSWITCH is actually using and provide mounting recommendations.
+
 ## Documentation
 
 ### Main Documentation
 
 - **[Security Guide](docker/SECURITY.md)** - 🔒 Detailed security configuration (MUST READ)
-- **[Quick Start Guide](docker/QUICKSTART.md)** - Fast setup guide
-- **[Build & Deploy Guide](docker/BUILD_AND_DEPLOY.md)** - Building and deployment instructions
-- **[Password Configuration](docker/PASSWORD_UPDATE.md)** - Password management guide
-- **[Push Guide](docker/PUSH_GUIDE.md)** - Image registry push guide
+- **[Docker Documentation](docker/README.md)** - 🐳 Docker-related documentation and quick links
+
+### Tools & Scripts
+
+- **[Configuration Path Verification Script](docker/verify_config_path.sh)** - Automated tool to verify configuration paths
 
 ### Configuration Files
 
@@ -558,6 +589,7 @@ Use [LinPhone](https://www.linphone.org/en/download/) or [Zoiper](https://www.zo
 1. Verify port 8021 is exposed
 2. Check ESL password
 3. Review firewall settings
+4. **Verify configuration path**: Run `./docker/verify_config_path.sh` to ensure you're mounting to the correct path (`/usr/local/freeswitch/etc/freeswitch`)
 
 ### Audio Issues
 
@@ -588,7 +620,7 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 
 ## Support
 
-- **Email**: support@bytedesk.com
+- **Email**: 270580156@qq.com
 - **GitHub Issues**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
 - **Documentation**: https://docs.bytedesk.com/
 

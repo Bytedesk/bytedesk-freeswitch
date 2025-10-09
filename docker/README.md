@@ -10,6 +10,7 @@
 - **[主 README (English)](../README.md)** - 完整的英文文档
 - **[主 README (中文)](../README.zh.md)** - 完整的中文文档
 - **[安全配置指南](./SECURITY.md)** - 详细的安全配置（必读）
+- **[配置路径指南](./CONFIG_PATH_GUIDE.md)** - 配置路径验证和故障排查
 
 ### 🚀 快速开始
 
@@ -34,7 +35,16 @@ docker run -d \
 - `FREESWITCH_ESL_PASSWORD` - ESL 管理密码（必填）
 - `FREESWITCH_DEFAULT_PASSWORD` - SIP 用户密码（默认 `1234`，必须修改）
 
-### 📁 目录结构
+### � 配置路径验证工具
+
+```bash
+# 验证 FreeSWITCH 实际使用的配置路径
+./docker/verify_config_path.sh
+```
+
+**重要**: FreeSWITCH 实际使用的配置路径是 `/usr/local/freeswitch/etc/freeswitch`，挂载自定义配置时必须使用此路径。
+
+### �📁 目录结构
 
 ```
 docker/
@@ -45,6 +55,7 @@ docker/
 ├── docker-compose.yml         # Docker Compose 配置
 ├── build.sh                   # 构建脚本
 ├── push.sh                    # 推送脚本
+├── verify_config_path.sh      # 配置路径验证脚本
 ├── Makefile                   # Make 命令
 ├── .env.example              # 环境变量示例
 └── conf/                     # FreeSWITCH 配置文件
@@ -86,7 +97,7 @@ docker compose down
 
 ### 📞 支持
 
-- **Email**: support@bytedesk.com
+- **Email**: 270580156@qq.com
 - **GitHub**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
 - **文档**: https://docs.bytedesk.com/
 
