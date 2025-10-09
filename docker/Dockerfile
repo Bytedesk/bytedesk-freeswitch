@@ -15,10 +15,11 @@ ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
 # Initialize LD_LIBRARY_PATH safely (avoid undefined var warning under BuildKit)
 ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 
-# Optional build of signalwire-c (mod_signalwire dependency). Disabled by default because
-# it intermittently segfaults under QEMU emulation for arm64 multi-arch builds.
-# Set at build time with: --build-arg BUILD_SIGNALWIRE=1
+# 可选构建参数：
+# BUILD_SIGNALWIRE=1 启用 signalwire-c / mod_signalwire 依赖链 (默认 0)
+# BUILD_VERTO=0 可禁用 mod_verto（否则需构建 libks，默认 1）
 ARG BUILD_SIGNALWIRE=0
+ARG BUILD_VERTO=1
 
 # 设置工作目录
 WORKDIR /root
@@ -36,14 +37,16 @@ RUN apt-get update && apt-get upgrade -y && \
     libssl-dev libcrypto++-dev libgnutls28-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 编译安装 libks（mod_verto 及部分现代模块需要；保持始终构建）
-RUN echo "Building libks (required for mod_verto; signalwire-c remains optional)" && \
-    git clone --depth 1 https://github.com/signalwire/libks.git && \
-    cd libks && \
-    cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make -j"$(nproc)" && make install && \
-    ldconfig && \
-    cd .. && rm -rf libks
+# 编译安装 libks（仅当需要 mod_verto 或 BUILD_SIGNALWIRE=1 时）
+RUN if [ "${BUILD_VERTO}" = "1" ] || [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
+            echo "Building libks (needed: BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+            git clone --depth 1 https://github.com/signalwire/libks.git && cd libks && \
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_TESTS=OFF && \
+            cmake --build build -- -j"$(nproc)" && cmake --install build && \
+            ldconfig && cd .. && rm -rf libks; \
+        else \
+            echo "Skipping libks (BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+        fi
 
 # 可选：编译安装 signalwire-c（仅当需要 mod_signalwire 时启用）
 RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
@@ -107,10 +110,15 @@ RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz &
 # 编译安装 FreeSWITCH
 RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.git && \
     cd freeswitch && \
-    # 若不构建 mod_signalwire，则在构建前修改 modules.conf 禁用它，避免 configure 失败
+    # 在 configure 前根据参数禁用不需要的模块（源码根目录 modules.conf）
     if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
         if grep -q '^applications/mod_signalwire' modules.conf 2>/dev/null; then \
             sed -i 's/^applications\/mod_signalwire/# applications\/mod_signalwire (disabled)/' modules.conf; \
+        fi; \
+    fi; \
+    if [ "${BUILD_VERTO}" != "1" ]; then \
+        if grep -q '^endpoints/mod_verto' modules.conf 2>/dev/null; then \
+            sed -i 's/^endpoints\/mod_verto/# endpoints\/mod_verto (disabled)/' modules.conf; \
         fi; \
     fi && \
     ./bootstrap.sh && \
