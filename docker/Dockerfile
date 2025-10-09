@@ -130,13 +130,13 @@ RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz &
 # 编译安装 FreeSWITCH
 RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.git && \
     cd freeswitch && \
-    # 在 configure 前根据参数禁用不需要的模块（源码根目录 modules.conf）
+    # 在 bootstrap 前根据参数禁用不需要的模块（修改 build/modules.conf.in）
     # 彻底禁用 mod_verto（改用 SIP.js + mod_sofia 实现 WebRTC）
     # 使用更强力的 sed 命令确保所有 mod_verto 相关行都被注释
-    sed -i '/mod_verto/s/^[^#]/# &/' modules.conf && \
+    sed -i '/mod_verto/s/^[^#]/# &/' build/modules.conf.in && \
     # 禁用 mod_signalwire（如未启用 BUILD_SIGNALWIRE）
     if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
-        sed -i '/mod_signalwire/s/^[^#]/# &/' modules.conf; \
+        sed -i '/mod_signalwire/s/^[^#]/# &/' build/modules.conf.in; \
     fi && \
     ./bootstrap.sh && \
     # 配置编译选项（根据视频支持参数）
