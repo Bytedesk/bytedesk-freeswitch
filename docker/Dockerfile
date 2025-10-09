@@ -132,13 +132,11 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     cd freeswitch && \
     # 在 configure 前根据参数禁用不需要的模块（源码根目录 modules.conf）
     # 彻底禁用 mod_verto（改用 SIP.js + mod_sofia 实现 WebRTC）
-    if grep -q '^endpoints/mod_verto' modules.conf 2>/dev/null; then \
-        sed -i 's/^endpoints\/mod_verto/# endpoints\/mod_verto (disabled - use SIP over WebSocket instead)/' modules.conf; \
-    fi; \
+    # 使用更强力的 sed 命令确保所有 mod_verto 相关行都被注释
+    sed -i '/mod_verto/s/^[^#]/# &/' modules.conf && \
+    # 禁用 mod_signalwire（如未启用 BUILD_SIGNALWIRE）
     if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
-        if grep -q '^applications/mod_signalwire' modules.conf 2>/dev/null; then \
-            sed -i 's/^applications\/mod_signalwire/# applications\/mod_signalwire (disabled)/' modules.conf; \
-        fi; \
+        sed -i '/mod_signalwire/s/^[^#]/# &/' modules.conf; \
     fi && \
     ./bootstrap.sh && \
     # 配置编译选项（根据视频支持参数）
