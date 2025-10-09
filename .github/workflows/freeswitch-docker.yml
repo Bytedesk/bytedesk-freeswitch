@@ -134,6 +134,9 @@ jobs:
             BUILD_DATE=${{ steps.meta.outputs.created }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ steps.version.outputs.VERSION }}
+            BUILD_SIGNALWIRE=0
+            INSTALL_SOUNDS=basic
+            ENABLE_VIDEO=1
 
       # 9. 构建并推送到 Docker Hub
       - name: Build and push to Docker Hub
@@ -156,6 +159,9 @@ jobs:
             BUILD_DATE=${{ steps.meta.outputs.created }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ steps.version.outputs.VERSION }}
+            BUILD_SIGNALWIRE=0
+            INSTALL_SOUNDS=basic
+            ENABLE_VIDEO=1
 
       # 10. 创建 GitHub Release（仅在推送标签时）
       - name: Create GitHub Release
@@ -207,10 +213,13 @@ jobs:
             - ✅ FreeSWITCH 1.10.12 版本
             - ✅ 包含 mod_mariadb 模块
             - ✅ 支持 MySQL/MariaDB 数据库
-            - ✅ 支持 WebRTC
+            - ✅ 支持 WebRTC (通过 SIP.js + mod_sofia)
+            - ✅ 支持视频通话 (VP8/VP9/H264)
+            - ✅ 包含基础音频文件 (8kHz)
             - ✅ 支持 SIP TLS 加密
             - ✅ 健康检查配置
             - ✅ 环境变量配置
+            - ❌ mod_verto 已禁用 (改用 SIP over WebSocket)
             
             ### 🔧 环境变量
             

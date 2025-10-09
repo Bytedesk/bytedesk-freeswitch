@@ -17,11 +17,19 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 
 # 可选构建参数：
 # BUILD_SIGNALWIRE=1 启用 signalwire-c / mod_signalwire 依赖链 (默认 0)
-# BUILD_VERTO=0 可禁用 mod_verto（否则需构建 libks，默认 1）
+# 注意：mod_verto 已彻底禁用，WebRTC 可通过 SIP.js + mod_sofia (ws/wss) 实现
 ARG BUILD_SIGNALWIRE=0
-ARG BUILD_VERTO=1
-# libks 版本（用于避免浅克隆缺少 git tag 导致 CMake 取版本失败）
-ARG LIBKS_VERSION=v2.0.0
+
+# Sounds 安装选项 (默认安装 8kHz 基础音频包)
+# INSTALL_SOUNDS=none 跳过所有声音文件安装
+# INSTALL_SOUNDS=basic 仅安装 8kHz 音频和音乐保持
+# INSTALL_SOUNDS=hd 安装 16kHz 高清音频
+# INSTALL_SOUNDS=uhd 安装 32kHz/48kHz 超高清音频
+ARG INSTALL_SOUNDS=basic
+
+# 视频编解码支持 (默认禁用，启用需要额外依赖)
+# ENABLE_VIDEO=1 启用 VP8/VP9/H264 视频编解码支持
+ARG ENABLE_VIDEO=0
 
 # 设置工作目录
 WORKDIR /root
@@ -36,18 +44,28 @@ RUN apt-get update && apt-get upgrade -y && \
     libsndfile1-dev \
     liblua5.3-dev lua5.3 \
     libmariadb-dev libmariadb-dev-compat \
-    libssl-dev libcrypto++-dev libgnutls28-dev && \
+    libssl-dev libcrypto++-dev libgnutls28-dev \
+    # 视频编解码依赖库
+    libvpx-dev libx264-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 编译安装 libks（仅当需要 mod_verto 或 BUILD_SIGNALWIRE=1 时）
-RUN if [ "${BUILD_VERTO}" = "1" ] || [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
-            echo "Building libks ${LIBKS_VERSION} (needed: BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
-            git clone --branch "${LIBKS_VERSION}" --depth 1 https://github.com/signalwire/libks.git && cd libks && \
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_TESTS=OFF && \
-            cmake --build build -- -j"$(nproc)" && cmake --install build && \
+# 编译安装 libks（仅当 BUILD_SIGNALWIRE=1 时需要）
+# 注意：mod_verto 已禁用，不再构建 libks，除非启用 signalwire
+RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
+            echo "Building libks (needed for BUILD_SIGNALWIRE=1)"; \
+            git clone --depth 1 https://github.com/signalwire/libks.git && cd libks && \
+            cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=/usr/local \
+                -DWITH_TESTS=OFF \
+                -DENABLE_DEB_PACKAGING=OFF \
+                -DBUILD_SHARED_LIBS=ON \
+                -DBUILD_STATIC_LIBS=OFF && \
+            cmake --build build -- -j"$(nproc)" && \
+            cmake --install build && \
             ldconfig && cd .. && rm -rf libks; \
         else \
-            echo "Skipping libks (BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+            echo "Skipping libks (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
         fi
 
 # 可选：编译安装 signalwire-c（仅当需要 mod_signalwire 时启用）
@@ -113,26 +131,62 @@ RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz &
 RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.git && \
     cd freeswitch && \
     # 在 configure 前根据参数禁用不需要的模块（源码根目录 modules.conf）
+    # 彻底禁用 mod_verto（改用 SIP.js + mod_sofia 实现 WebRTC）
+    if grep -q '^endpoints/mod_verto' modules.conf 2>/dev/null; then \
+        sed -i 's/^endpoints\/mod_verto/# endpoints\/mod_verto (disabled - use SIP over WebSocket instead)/' modules.conf; \
+    fi; \
     if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
         if grep -q '^applications/mod_signalwire' modules.conf 2>/dev/null; then \
             sed -i 's/^applications\/mod_signalwire/# applications\/mod_signalwire (disabled)/' modules.conf; \
         fi; \
-    fi; \
-    if [ "${BUILD_VERTO}" != "1" ]; then \
-        if grep -q '^endpoints/mod_verto' modules.conf 2>/dev/null; then \
-            sed -i 's/^endpoints\/mod_verto/# endpoints\/mod_verto (disabled)/' modules.conf; \
-        fi; \
     fi && \
     ./bootstrap.sh && \
-    ./configure --prefix=${FREESWITCH_PREFIX} \
-                --enable-core-odbc-support \
-                --enable-core-pgsql-support && \
+    # 配置编译选项（根据视频支持参数）
+    if [ "${ENABLE_VIDEO}" = "1" ]; then \
+        echo "Configuring with video support (VP8/VP9/H264)..."; \
+        ./configure --prefix=${FREESWITCH_PREFIX} \
+                    --enable-core-odbc-support \
+                    --enable-core-pgsql-support \
+                    --with-vpx \
+                    --with-openh264; \
+    else \
+        echo "Configuring without video support..."; \
+        ./configure --prefix=${FREESWITCH_PREFIX} \
+                    --enable-core-odbc-support \
+                    --enable-core-pgsql-support; \
+    fi && \
     # 修改 Makefile 移除 -Werror
     sed -i 's/-Werror //g' src/mod/applications/mod_av/Makefile && \
     make -j"$(nproc)" && make install && \
     # 编译 mod_mariadb 模块
     make mod_mariadb && \
     make mod_mariadb-install && \
+    # 安装 Sounds 音频文件（根据 INSTALL_SOUNDS 参数）
+    if [ "${INSTALL_SOUNDS}" != "none" ]; then \
+        echo "Installing FreeSWITCH sounds (${INSTALL_SOUNDS})..."; \
+        case "${INSTALL_SOUNDS}" in \
+            "basic") \
+                echo "Installing basic sounds (8kHz)..."; \
+                make sounds-install && \
+                make moh-install; \
+                ;; \
+            "hd") \
+                echo "Installing HD sounds (16kHz)..."; \
+                make hd-sounds-install && \
+                make hd-moh-install; \
+                ;; \
+            "uhd") \
+                echo "Installing UHD sounds (32kHz/48kHz)..."; \
+                make uhd-sounds-install && \
+                make uhd-moh-install; \
+                ;; \
+            *) \
+                echo "Unknown INSTALL_SOUNDS value: ${INSTALL_SOUNDS}, skipping..."; \
+                ;; \
+        esac; \
+    else \
+        echo "Skipping sounds installation (INSTALL_SOUNDS=none)"; \
+    fi && \
     cd .. && rm -rf freeswitch
 
 # 确保所有共享库都被正确链接
