@@ -152,8 +152,8 @@
     <!-- NEEDS DOCUMENTATION -->
 
     <!-- RTP port range -->
-    <param name="rtp-start-port" value="16384"/>
-    <param name="rtp-end-port" value="32768"/>
+    <param name="rtp-start-port" value="16384" />
+    <param name="rtp-end-port" value="32768" />
 
     <!-- Test each port to make sure it is not in use by some other process before allocating it to
     RTP -->
@@ -190,7 +190,8 @@
     <!-- <param name="core-db-dsn"
     value="postgresql://freeswitch:@127.0.0.1/freeswitch?options=-c%20client_min_messages%3DNOTICE"
     /> -->
-    <param name="core-db-dsn" value="mariadb://Server=124.220.58.234;Port=3306;Database=bytedesk;Uid=root;Pwd=nDWXYLK6QQTr;" />
+    <param name="core-db-dsn"
+      value="mariadb://Server=127.0.0.1;Port=3306;Database=freeswitch;Uid=root;Pwd=changeme;" />
     <!-- 配置数据库表前缀 -->
     <param name="core-db-table-prefix" value="freeswitch_" />
     <!-- <param name="core-db-dsn" value="dsn:username:password" /> -->

@@ -98,11 +98,42 @@ if [ -n "$FREESWITCH_DB_HOST" ] && [ -n "$FREESWITCH_DB_NAME" ]; then
     DB_USER=${FREESWITCH_DB_USER:-root}
     DB_PASSWORD=${FREESWITCH_DB_PASSWORD:-}
     DB_PORT=${FREESWITCH_DB_PORT:-3306}
-    
-    DB_DSN="mariadb://Server=${FREESWITCH_DB_HOST};Port=${DB_PORT};Database=${FREESWITCH_DB_NAME};Uid=${DB_USER};Pwd=${DB_PASSWORD};"
-    
-    sed -i "s|<param name=\"core-db-dsn\" value=\".*\"\/>|<param name=\"core-db-dsn\" value=\"${DB_DSN}\"\/|g" \
-        ${FREESWITCH_PREFIX}/conf/autoload_configs/switch.conf.xml
+    DB_CHARSET=${FREESWITCH_DB_CHARSET:-utf8mb4}
+    DB_SCHEME=${FREESWITCH_DB_SCHEME:-mariadb}
+    DB_ODBC_DIALECT=${FREESWITCH_DB_ODBC_DIALECT:-mysql}
+
+    CORE_DSN="${DB_SCHEME}://Server=${FREESWITCH_DB_HOST};Port=${DB_PORT};Database=${FREESWITCH_DB_NAME};Uid=${DB_USER};Pwd=${DB_PASSWORD};"
+    ODBC_DSN="${DB_ODBC_DIALECT}:host=${FREESWITCH_DB_HOST};port=${DB_PORT};database=${FREESWITCH_DB_NAME};uid=${DB_USER};pwd=${DB_PASSWORD};charset=${DB_CHARSET}"
+
+    export CORE_DSN ODBC_DSN
+    python3 - <<'PY'
+import os
+import re
+import sys
+from pathlib import Path
+
+prefix = os.environ.get("FREESWITCH_PREFIX", "/usr/local/freeswitch")
+core_dsn = os.environ.get("CORE_DSN")
+odbc_dsn = os.environ.get("ODBC_DSN")
+
+updates = [
+    (Path(prefix) / "conf" / "autoload_configs" / "switch.conf.xml", r'(<param name="core-db-dsn" value=")([^"\\n]*)("\s*/?>)', core_dsn),
+    (Path(prefix) / "conf" / "autoload_configs" / "db.conf.xml", r'(<param name="odbc-dsn" value=")([^"\\n]*)("\s*/?>)', odbc_dsn),
+]
+
+for path, pattern, replacement in updates:
+    if not replacement:
+        continue
+    if not path.exists():
+        print(f"[WARN] File not found: {path}", file=sys.stderr)
+        continue
+    original = path.read_text(encoding="utf-8")
+    updated, count = re.subn(pattern, lambda m: f"{m.group(1)}{replacement}{m.group(3)}", original, count=1)
+    if count:
+        path.write_text(updated, encoding="utf-8")
+    else:
+        print(f"[WARN] Pattern not updated in {path}", file=sys.stderr)
+PY
 fi
 
 # 设置时区
