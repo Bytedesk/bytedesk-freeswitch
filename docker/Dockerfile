@@ -20,6 +20,8 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 # BUILD_VERTO=0 可禁用 mod_verto（否则需构建 libks，默认 1）
 ARG BUILD_SIGNALWIRE=0
 ARG BUILD_VERTO=1
+# libks 版本（用于避免浅克隆缺少 git tag 导致 CMake 取版本失败）
+ARG LIBKS_VERSION=v2.0.0
 
 # 设置工作目录
 WORKDIR /root
@@ -39,8 +41,8 @@ RUN apt-get update && apt-get upgrade -y && \
 
 # 编译安装 libks（仅当需要 mod_verto 或 BUILD_SIGNALWIRE=1 时）
 RUN if [ "${BUILD_VERTO}" = "1" ] || [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
-            echo "Building libks (needed: BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
-            git clone --depth 1 https://github.com/signalwire/libks.git && cd libks && \
+            echo "Building libks ${LIBKS_VERSION} (needed: BUILD_VERTO=${BUILD_VERTO}, BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+            git clone --branch "${LIBKS_VERSION}" --depth 1 https://github.com/signalwire/libks.git && cd libks && \
             cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_TESTS=OFF && \
             cmake --build build -- -j"$(nproc)" && cmake --install build && \
             ldconfig && cd .. && rm -rf libks; \
