@@ -6,22 +6,6 @@
 
 FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu 22.04 LTS.
 
-## 🚨 Security Warning
-
-> **⚠️ CRITICAL: Change default passwords before production deployment!**
-> 
-> This image contains default passwords that MUST be changed:
-> 1. **ESL Password**: Set via `FREESWITCH_ESL_PASSWORD` environment variable (required)
-> 2. **SIP User Password**: Set via `FREESWITCH_DEFAULT_PASSWORD` environment variable (default is `1234`)
-> 
-> **Failure to change default passwords can lead to:**
-> - Unauthorized access to your phone system
-> - Toll fraud and financial loss
-> - Call record leakage
-> - System abuse for illegal activities
-> 
-> 📖 See [Security Guide](docker/SECURITY.md) for detailed security configuration.
-
 ## 📑 Table of Contents
 
 - [Quick Start](#quick-start)
@@ -37,35 +21,6 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - [Support](#support)
 
 ## Quick Start
-
-### Pull and Run (Unified: Dev/Prod)
-
-```bash
-# Pull from Docker Hub
-docker pull bytedesk/freeswitch:latest
-
-# Pull from Alibaba Cloud (recommended for China)
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
-
-# Run container (adjust env/ports for your scenario)
-docker run -d \
-  --name freeswitch \
-  -p 5060:5060/tcp -p 5060:5060/udp \
-  -p 5080:5080/tcp -p 5080:5080/udp \
-  -p 8021:8021 \
-  -p 7443:7443 \
-  -p 16384-32768:16384-32768/udp \
-  -e FREESWITCH_ESL_PASSWORD='YOUR_ESL_PASSWORD' \
-  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_SIP_PASSWORD' \
-  -e FREESWITCH_DOMAIN=sip.yourdomain.com \
-  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
-  -e TZ=Asia/Shanghai \
-  -v freeswitch_data:/usr/local/freeswitch \
-  # Config directory - override container config with local files (actual runtime path: /usr/local/freeswitch/etc/freeswitch)
-  -v ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch \
-  --restart=unless-stopped \
-  bytedesk/freeswitch:latest
-```
 
 ## Features
 
@@ -93,7 +48,32 @@ Tip: Multi-arch images run natively on x86_64 servers and ARM devices like Apple
 
 ### Method 1: Docker Run
 
-See [Quick Start](#quick-start) section above.
+```bash
+# Pull from Docker Hub
+docker pull bytedesk/freeswitch:latest
+
+# Pull from Alibaba Cloud (recommended for China)
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
+
+# Run container (adjust env/ports for your scenario)
+docker run -d \
+  --name freeswitch \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 5080:5080/tcp -p 5080:5080/udp \
+  -p 8021:8021 \
+  -p 7443:7443 \
+  -p 16384-32768:16384-32768/udp \
+  -e FREESWITCH_ESL_PASSWORD='YOUR_ESL_PASSWORD' \
+  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_SIP_PASSWORD' \
+  -e FREESWITCH_DOMAIN=sip.yourdomain.com \
+  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
+  -e TZ=Asia/Shanghai \
+  -v freeswitch_data:/usr/local/freeswitch \
+  # Config directory - override container config with local files (actual runtime path: /usr/local/freeswitch/etc/freeswitch)
+  -v ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch \
+  --restart=unless-stopped \
+  bytedesk/freeswitch:latest
+```
 
 ### Method 2: Docker Compose
 
@@ -145,25 +125,6 @@ volumes:
 ```
 
 Note: When using local custom configuration, make sure the target path is `/usr/local/freeswitch/etc/freeswitch`, which is the actual configuration directory read by FreeSWITCH at runtime.
-
-**Prepare custom configuration files:**
-
-```bash
-# 1. Export default configuration to local directory
-mkdir -p ./freeswitch-conf
-docker run --rm bytedesk/freeswitch:latest \
-  tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
-
-# 2. Modify configuration files (e.g., change ESL password)
-# Edit ./freeswitch-conf/autoload_configs/event_socket.conf.xml
-
-# 3. Start the container (it will use your custom configuration)
-docker compose up -d
-
-# 4. Verify the configuration is effective
-docker exec -it freeswitch-bytedesk fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
-# Should output: /usr/local/freeswitch/etc/freeswitch
-```
 
 Create a `.env` file (copy from `docker/.env.example`):
 

@@ -6,45 +6,7 @@
 
 微语呼叫中心系统的 FreeSWITCH 1.10.12 Docker 镜像，基于 Ubuntu 22.04 LTS。
 
-## 🚨 安全警告
-
-> **⚠️ 重要：在生产环境部署前必须修改默认密码！**
-> 
-> 本镜像包含以下需要修改的默认密码：
-> 1. **ESL 密码**: 通过 `FREESWITCH_ESL_PASSWORD` 环境变量设置（必填）
-> 2. **SIP 用户密码**: 通过 `FREESWITCH_DEFAULT_PASSWORD` 环境变量设置（默认为 `1234`）
-> 
-> **不修改默认密码将导致严重的安全风险：**
-> - 未授权访问您的电话系统
-> - 话费欺诈（Toll Fraud）
 ## 快速开始
-
-### 使用 Docker 运行（开发/生产）
-
-```bash
-# 拉取镜像（可二选一）
-docker pull bytedesk/freeswitch:latest
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest  # 中国大陆推荐
-
-# 运行容器（统一命令，开发/生产通用，按需调整变量与端口暴露）
-docker run -d \
-  --name freeswitch \
-  -p 5060:5060/tcp -p 5060:5060/udp \
-  -p 5080:5080/tcp -p 5080:5080/udp \
-  -p 8021:8021 \
-  -p 7443:7443 \
-  -p 16384-32768:16384-32768/udp \
-  -e FREESWITCH_ESL_PASSWORD='YOUR_ESL_PASSWORD' \
-  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_SIP_PASSWORD' \
-  -e FREESWITCH_DOMAIN=sip.yourdomain.com \
-  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
-  -e TZ=Asia/Shanghai \
-  -v freeswitch_data:/usr/local/freeswitch \
-  # 配置文件目录 - 使用本地配置文件覆盖容器内的配置（经验证实际使用 /usr/local/freeswitch/etc/freeswitch）
-  -v ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch \
-  --restart=unless-stopped \
-  bytedesk/freeswitch:latest
-  ```
 
 ## 功能特性
 
@@ -72,7 +34,30 @@ docker run -d \
 
 ### 方式一：Docker Run
 
-参见上方 [快速开始](#快速开始) 部分。
+```bash
+# 拉取镜像（可二选一）
+docker pull bytedesk/freeswitch:latest
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest  # 中国大陆推荐
+
+# 运行容器（统一命令，开发/生产通用，按需调整变量与端口暴露）
+docker run -d \
+  --name freeswitch \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 5080:5080/tcp -p 5080:5080/udp \
+  -p 8021:8021 \
+  -p 7443:7443 \
+  -p 16384-32768:16384-32768/udp \
+  -e FREESWITCH_ESL_PASSWORD='YOUR_ESL_PASSWORD' \
+  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_SIP_PASSWORD' \
+  -e FREESWITCH_DOMAIN=sip.yourdomain.com \
+  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
+  -e TZ=Asia/Shanghai \
+  -v freeswitch_data:/usr/local/freeswitch \
+  # 配置文件目录 - 使用本地配置文件覆盖容器内的配置（经验证实际使用 /usr/local/freeswitch/etc/freeswitch）
+  -v ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch \
+  --restart=unless-stopped \
+  bytedesk/freeswitch:latest
+```
 
 ### 方式二：Docker Compose
 
@@ -81,8 +66,6 @@ docker run -d \
 创建 `docker-compose.yml` 文件（如需自定义配置，取消注释挂载行）：
 
 ```yaml
-version: "3.9"
-
 services:
   freeswitch:
     image: bytedesk/freeswitch:latest
@@ -124,25 +107,6 @@ volumes:
 ```
 
 说明：当需要加载本地自定义配置时，取消注释自定义配置挂载行，确保目标路径为 `/usr/local/freeswitch/etc/freeswitch`，这是 FreeSWITCH 实际读取的配置目录。
-
-**准备自定义配置文件：**
-
-```bash
-# 1. 导出默认配置到本地
-mkdir -p ./freeswitch-conf
-docker run --rm bytedesk/freeswitch:latest \
-  tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
-
-# 2. 修改配置文件（例如修改 ESL 密码）
-# 编辑 ./freeswitch-conf/autoload_configs/event_socket.conf.xml
-
-# 3. 启动容器（将使用您的自定义配置）
-docker compose up -d
-
-# 4. 验证配置是否生效
-docker exec -it freeswitch-bytedesk fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
-# 应该输出: /usr/local/freeswitch/etc/freeswitch
-```
 
 创建 `.env` 文件（从 `docker/.env.example` 复制）：
 
