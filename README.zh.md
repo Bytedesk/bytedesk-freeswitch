@@ -17,66 +17,34 @@
 > **不修改默认密码将导致严重的安全风险：**
 > - 未授权访问您的电话系统
 > - 话费欺诈（Toll Fraud）
-> - 通话记录泄露
-> - 系统被用于非法呼叫
-> 
-> 📖 详细安全配置请查看 [安全建议](#安全建议) 部分
-
-## 📑 目录
-
-- [快速开始](#快速开始)
-- [功能特性](#功能特性)
-- [安装方式](#安装方式)
-- [配置说明](#配置说明)
-- [环境变量](#环境变量)
-- [端口说明](#端口说明)
-- [测试验证](#测试验证)
-- [安全建议](#安全建议)
-- [文档](#文档)
-- [贡献](#贡献)
-- [许可证](#许可证)
-- [技术支持](#技术支持)
-
 ## 快速开始
 
-### 拉取并运行（开发环境）
+### 使用 Docker 运行（开发/生产）
 
 ```bash
-# 从 Docker Hub 拉取
+# 拉取镜像（可二选一）
 docker pull bytedesk/freeswitch:latest
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest  # 中国大陆推荐
 
-# 从阿里云拉取（中国大陆推荐）
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
-
-# 运行容器
+# 运行容器（统一命令，开发/生产通用，按需调整变量与端口暴露）
 docker run -d \
   --name freeswitch \
-  -p 5060:5060/tcp -p 5060:5060/udp \
-  -p 8021:8021 \
-  -e FREESWITCH_ESL_PASSWORD='dev_esl_pass_123' \
-  -e FREESWITCH_DEFAULT_PASSWORD='dev_sip_pass_123' \
-  bytedesk/freeswitch:latest
-```
-
-### 生产环境部署
-
-```bash
-docker run -d \
-  --name freeswitch-prod \
   -p 5060:5060/tcp -p 5060:5060/udp \
   -p 5080:5080/tcp -p 5080:5080/udp \
   -p 8021:8021 \
   -p 7443:7443 \
   -p 16384-32768:16384-32768/udp \
-  -e FREESWITCH_ESL_PASSWORD='您的强ESL密码' \
-  -e FREESWITCH_DEFAULT_PASSWORD='您的强SIP密码' \
+  -e FREESWITCH_ESL_PASSWORD='YOUR_ESL_PASSWORD' \
+  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_SIP_PASSWORD' \
   -e FREESWITCH_DOMAIN=sip.yourdomain.com \
-  -e FREESWITCH_EXTERNAL_IP=您的公网IP \
+  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
   -e TZ=Asia/Shanghai \
   -v freeswitch_data:/usr/local/freeswitch \
+  # 配置文件目录 - 使用本地配置文件覆盖容器内的配置（经验证实际使用 /usr/local/freeswitch/etc/freeswitch）
+  -v ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch \
   --restart=unless-stopped \
   bytedesk/freeswitch:latest
-```
+  ```
 
 ## 功能特性
 
@@ -108,51 +76,9 @@ docker run -d \
 
 ### 方式二：Docker Compose
 
-#### 基础配置（使用内置配置）
+#### 单一示例（可选自定义配置）
 
-创建 `docker-compose.yml` 文件：
-
-```yaml
-version: "3.9"
-
-services:
-  freeswitch:
-    image: bytedesk/freeswitch:latest
-    container_name: freeswitch-bytedesk
-    restart: unless-stopped
-    ports:
-      - "5060:5060/tcp"
-      - "5060:5060/udp"
-      - "5080:5080/tcp"
-      - "5080:5080/udp"
-      - "8021:8021"
-      - "7443:7443"
-      - "16384-32768:16384-32768/udp"
-    environment:
-      FREESWITCH_ESL_PASSWORD: ${ESL_PASSWORD}
-      FREESWITCH_DEFAULT_PASSWORD: ${SIP_PASSWORD}
-      FREESWITCH_DOMAIN: ${DOMAIN}
-      FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
-      TZ: Asia/Shanghai
-    volumes:
-      - freeswitch-log:/usr/local/freeswitch/log
-      - freeswitch-db:/usr/local/freeswitch/db
-      - freeswitch-recordings:/usr/local/freeswitch/recordings
-    healthcheck:
-      test: ["CMD", "fs_cli", "-p", "${ESL_PASSWORD}", "-x", "status"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-volumes:
-  freeswitch-log:
-  freeswitch-db:
-  freeswitch-recordings:
-```
-
-#### 高级配置（使用自定义配置文件）
-
-如果需要自定义配置，挂载配置目录：
+创建 `docker-compose.yml` 文件（如需自定义配置，取消注释挂载行）：
 
 ```yaml
 version: "3.9"
@@ -177,8 +103,10 @@ services:
       FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
       TZ: Asia/Shanghai
     volumes:
-      # ✅ 挂载自定义配置目录（关键：使用正确的路径）
-      - ./freeswitch-conf:/usr/local/freeswitch/etc/freeswitch
+      # 可选：挂载自定义配置目录（实际运行路径：/usr/local/freeswitch/etc/freeswitch）
+      # - ./freeswitch-conf:/usr/local/freeswitch/etc/freeswitch
+      # 也可按项目结构改为：
+      # - ../../../../deploy/freeswitch/conf:/usr/local/freeswitch/etc/freeswitch
       # 数据持久化
       - freeswitch-log:/usr/local/freeswitch/log
       - freeswitch-db:/usr/local/freeswitch/db
@@ -194,6 +122,8 @@ volumes:
   freeswitch-db:
   freeswitch-recordings:
 ```
+
+说明：当需要加载本地自定义配置时，取消注释自定义配置挂载行，确保目标路径为 `/usr/local/freeswitch/etc/freeswitch`，这是 FreeSWITCH 实际读取的配置目录。
 
 **准备自定义配置文件：**
 
@@ -357,144 +287,3 @@ docker run -d \
 | 5081 | TCP | SIP 外部 TLS |
 | 5066 | TCP | WebSocket 信令 |
 | 3478-3479 | UDP | STUN 服务 |
-
-## 安全建议
-
-### 密码安全
-
-1. **修改 ESL 密码（必须）**
-   - 至少 16 个字符
-   - 包含大小写字母、数字和特殊字符
-   - 不要使用字典单词
-
-2. **修改 SIP 默认密码（强烈建议）**
-   - 默认为 `1234` - 极度脆弱
-   - 影响用户 1000-1019、1001-brian、1002-admin
-   - 使用强密码：至少 12 个字符
-
-3. **密码强度示例：**
-   ```
-   ❌ 弱: 123456, password, 1234
-   ⚠️ 中等: test1234, freeswitch123
-   ✅ 强: Fs#2024@Secure!Pass, MyPbx$Str0ng#2024
-   ```
-
-### 生产环境检查清单
-
-部署到生产环境前：
-
-- [ ] 已修改 `FREESWITCH_ESL_PASSWORD`
-- [ ] 已修改 `FREESWITCH_DEFAULT_PASSWORD`
-- [ ] 已配置 `FREESWITCH_EXTERNAL_IP`
-- [ ] 已配置防火墙规则
-- [ ] 已启用 SIP TLS（端口 5061, 5081）
-- [ ] 已启用 SRTP 加密
-- [ ] 已配置 ACL 访问控制
-- [ ] 已设置日志监控
-- [ ] 已配置备份策略
-- [ ] 已限制不必要的端口暴露
-- [ ] 已配置 fail2ban 或类似工具
-- [ ] 已审查默认用户配置
-
-📖 **详细安全配置请参见 [docker/SECURITY.md](docker/SECURITY.md)**
-
-## 测试验证
-
-### 1. 检查容器状态
-
-```bash
-docker ps | grep freeswitch
-```
-
-### 2. 查看日志
-
-```bash
-# 实时日志
-docker logs -f freeswitch
-
-# 最近 100 行
-docker logs --tail 100 freeswitch
-```
-
-### 3. 访问 FreeSWITCH CLI
-
-```bash
-docker exec -it freeswitch fs_cli -p 您的ESL密码
-```
-
-### 4. 使用 SIP 客户端测试
-
-使用 [LinPhone](https://www.linphone.org/en/download/) 或 [Zoiper](https://www.zoiper.com/)：
-
-**配置参数：**
-- **用户名**: 1000（或 1001-1019）
-- **密码**: 您的 `FREESWITCH_DEFAULT_PASSWORD` 值
-- **域名**: 您的 FreeSWITCH 服务器地址
-- **传输**: UDP (5060) 或 TCP (5060)
-
-**测试分机：**
-- **9196**: 回音测试（无延迟）
-- **9195**: 回音测试（5秒延迟）
-- **9664**: 保持音乐
-
-### 5. 验证配置路径
-
-如果遇到配置相关问题（例如 ESL 连接失败），请验证配置路径：
-
-```bash
-# 运行验证脚本
-./docker/verify_config_path.sh
-```
-
-这将确认 FreeSWITCH 实际使用的配置目录并提供挂载建议。
-
-## 文档
-
-### 主要文档
-
-- **[安全指南](docker/SECURITY.md)** - 🔒 详细的安全配置（必读）
-- **[Docker 文档](docker/README.md)** - 🐳 Docker 相关文档和快速链接
-
-### 工具脚本
-
-- **[配置路径验证脚本](docker/verify_config_path.sh)** - 自动验证配置路径的工具
-
-### 配置文件
-
-- **[Dockerfile](docker/Dockerfile)** - Docker 镜像构建文件
-- **[docker-entrypoint.sh](docker/docker-entrypoint.sh)** - 容器启动脚本
-- **[docker-compose.yml](docker/docker-compose.yml)** - Docker Compose 配置
-- **[.env.example](docker/.env.example)** - 环境变量模板
-
-### 外部资源
-
-- [FreeSWITCH 官方文档](https://freeswitch.org/confluence/)
-- [FreeSWITCH 安全最佳实践](https://freeswitch.org/confluence/display/FREESWITCH/Security)
-- [Docker Hub - bytedesk/freeswitch](https://hub.docker.com/r/bytedesk/freeswitch)
-- [阿里云镜像仓库](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)
-- [微语官方文档](https://docs.bytedesk.com/)
-
-## 贡献
-
-欢迎贡献！请：
-
-1. Fork 仓库
-2. 创建功能分支
-3. 提交更改
-4. 提交 Pull Request
-
-## 许可证
-
-本项目采用 [LICENSE](LICENSE) 文件中指定的许可证。
-
-## 技术支持
-
-- **邮箱**: 270580156@qq.com
-- **GitHub Issues**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
-- **文档**: https://docs.bytedesk.com/
-
----
-
-**维护者**: [微语](https://bytedesk.com)  
-**最后更新**: 2025-10-09
-
