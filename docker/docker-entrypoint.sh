@@ -119,6 +119,7 @@ odbc_dsn = os.environ.get("ODBC_DSN")
 updates = [
     (Path(prefix) / "conf" / "autoload_configs" / "switch.conf.xml", r'(<param name="core-db-dsn" value=")([^"\\n]*)("\s*/?>)', core_dsn),
     (Path(prefix) / "conf" / "autoload_configs" / "db.conf.xml", r'(<param name="odbc-dsn" value=")([^"\\n]*)("\s*/?>)', odbc_dsn),
+    (Path(prefix) / "conf" / "autoload_configs" / "odbc.conf.xml", r'(<param name="dsn" value=")([^"\\n]*)("\s*/?>)', odbc_dsn),
 ]
 
 for path, pattern, replacement in updates:

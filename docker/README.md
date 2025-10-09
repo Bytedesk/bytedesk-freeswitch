@@ -245,7 +245,7 @@ services:
 | FREESWITCH_DB_ODBC_DIALECT | ODBC 连接前缀（mysql/mariadb） | mysql | 否 |
 | TZ | 时区 | Asia/Shanghai | 否 |
 
-> **提示**：当设置 `FREESWITCH_DB_HOST` 与 `FREESWITCH_DB_NAME` 时，容器启动脚本会自动重写 `switch.conf.xml` 与 `db.conf.xml` 中的 DSN 配置，确保 `mod_mariadb` 及核心数据库均连接到外部数据库。可以配合 `FREESWITCH_DB_USER`、`FREESWITCH_DB_PASSWORD`、`FREESWITCH_DB_CHARSET` 等变量实现完全自定义的连接信息。
+> **提示**：当设置 `FREESWITCH_DB_HOST` 与 `FREESWITCH_DB_NAME` 时，容器启动脚本会自动重写 `switch.conf.xml`、`db.conf.xml` 与 `odbc.conf.xml` 中的 DSN 配置，确保 `mod_mariadb`、核心数据库及其他 ODBC 消费者均连接到外部数据库。可以配合 `FREESWITCH_DB_USER`、`FREESWITCH_DB_PASSWORD`、`FREESWITCH_DB_CHARSET` 等变量实现完全自定义的连接信息。
 
 ## 端口说明
 

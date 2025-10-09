@@ -14,18 +14,11 @@
   
   <!-- 数据库连接池 -->
   <databases>
-    <!-- Bytedesk MySQL数据库连接 -->
-    <database name="bytedesk_mysql">
-      <!-- MySQL ODBC连接字符串 -->
-      <param name="dsn" value="mysql:host=124.220.58.234;port=3306;database=bytedesk;uid=root;pwd=nDWXYLK6QQTr"/>
-      <!-- 或者使用标准ODBC DSN格式 -->
-      <!-- <param name="dsn" value="DRIVER={MySQL ODBC 8.0 ANSI Driver};SERVER=124.220.58.234;PORT=3306;DATABASE=bytedesk;UID=root;PWD=nDWXYLK6QQTr;CHARSET=utf8mb4"/> -->
-      
-      <!-- 连接池设置 -->
+    <!-- 默认 MySQL/MariaDB 数据库连接，可通过环境变量覆盖 -->
+    <database name="default">
+  <param name="dsn" value="mysql:host=bytedesk-mysql;port=3306;database=bytedesk;uid=root;pwd=r8FqfdbWUaN3;charset=utf8mb4"/>
       <param name="max-connections" value="25"/>
       <param name="pre-connect" value="5"/>
-      
-      <!-- 连接选项 -->
       <param name="auto-commit" value="true"/>
       <param name="connection-timeout" value="10"/>
       <param name="query-timeout" value="30"/>

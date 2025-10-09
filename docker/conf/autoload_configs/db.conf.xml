@@ -2,7 +2,7 @@
   <settings>
     <!-- 默认 MySQL/MariaDB 数据库连接，可通过环境变量覆盖 -->
     <param name="odbc-dsn"
-      value="mysql:host=127.0.0.1;port=3306;database=freeswitch;uid=root;pwd=changeme;charset=utf8mb4" />
+      value="mysql:host=bytedesk-mysql;port=3306;database=bytedesk;uid=root;pwd=r8FqfdbWUaN3;charset=utf8mb4" />
 
     <!-- 连接池设置 -->
     <param name="max-connections" value="25" />

@@ -109,3 +109,113 @@ docker run -d \
   -e FREESWITCH_ESL_PASSWORD=password \
   bytedesk/freeswitch:latest
 ```
+
+## Custom configuration
+
+The container ships with a full FreeSWITCH configuration under `/usr/local/freeswitch/conf`. To run with your own XML files:
+
+1. Prepare a config directory on the host (either start from the defaults or your existing deployment):
+
+   ```bash
+   mkdir -p ./freeswitch-conf
+   docker run --rm bytedesk/freeswitch:latest \
+     tar -C /usr/local/freeswitch/conf -cf - . | tar -C ./freeswitch-conf -xf -
+   ```
+
+2. Edit the XML files locally. Common touch-points:
+   - `vars.xml` & `sip_profiles/internal.xml` for domains, ports, codecs.
+   - `autoload_configs/switch.conf.xml` for core behaviour (RTP range, core DB).
+   - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` for ODBC/`mod_mariadb` DSNs.
+
+3. Mount the folder into the container so FreeSWITCH boots with your files:
+
+   ```bash
+   docker run -d \
+     --name freeswitch-bytedesk \
+     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/conf \
+     -p 5060:5060/tcp -p 5060:5060/udp \
+     -p 8021:8021 \
+     -e FREESWITCH_ESL_PASSWORD=password \
+     bytedesk/freeswitch:latest
+   ```
+
+> ℹ️ The image also contains `/usr/local/freeswitch/etc/freeswitch`, which is left over from the upstream install tree. Runtime FreeSWITCH reads configuration exclusively from `/usr/local/freeswitch/conf` (verified against `registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest`), so mount or edit that path when supplying custom XML files.
+
+### Environment overrides for database DSNs
+
+If you prefer to keep the bundled XML files and only swap database connectivity, set the following environment variables when starting the container. The entrypoint rewrites `switch.conf.xml`, `db.conf.xml`, and `odbc.conf.xml` automatically:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `FREESWITCH_DB_HOST` | Database host (required to trigger rewrite) | - |
+| `FREESWITCH_DB_NAME` | Database schema | - |
+| `FREESWITCH_DB_USER` | Database user | `root` |
+| `FREESWITCH_DB_PASSWORD` | Database password | empty |
+| `FREESWITCH_DB_PORT` | Database port | `3306` |
+| `FREESWITCH_DB_CHARSET` | Charset for ODBC DSN | `utf8mb4` |
+| `FREESWITCH_DB_SCHEME` | DSN scheme for FreeSWITCH core (`mariadb`, `mysql`, `pgsql`, ...) | `mariadb` |
+| `FREESWITCH_DB_ODBC_DIALECT` | Prefix for ODBC DSN (`mysql`/`mariadb`) | `mysql` |
+
+Example:
+
+```bash
+docker run -d \
+  --name freeswitch-bytedesk \
+  -e FREESWITCH_DB_HOST=db.internal \
+  -e FREESWITCH_DB_NAME=freeswitch_prod \
+  -e FREESWITCH_DB_USER=fs_user \
+  -e FREESWITCH_DB_PASSWORD=secret \
+  -e FREESWITCH_DB_PORT=3307 \
+  -e FREESWITCH_DB_SCHEME=mariadb \
+  -e FREESWITCH_DB_ODBC_DIALECT=mariadb \
+  bytedesk/freeswitch:latest
+```
+
+After the container starts, you can verify the rewritten DSN values by inspecting the mounted files or reading `/usr/local/freeswitch/conf/autoload_configs/*.xml` inside the container.
+
+### Docker Compose example
+
+For repeatable deployments, you can manage the container with Docker Compose:
+
+```yaml
+version: "3.9"
+
+services:
+  freeswitch:
+    image: bytedesk/freeswitch:latest
+    container_name: freeswitch-bytedesk
+    restart: unless-stopped
+    ports:
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5080:5080/tcp"
+      - "5080:5080/udp"
+      - "8021:8021"
+      - "7443:7443"
+      - "16384-32768:16384-32768/udp"
+    environment:
+      FREESWITCH_ESL_PASSWORD: bytedesk123
+      FREESWITCH_DB_HOST: db.example.com
+      FREESWITCH_DB_NAME: freeswitch
+      FREESWITCH_DB_USER: fs_user
+      FREESWITCH_DB_PASSWORD: fs_secret
+      TZ: Asia/Shanghai
+    volumes:
+      - ./freeswitch-conf:/usr/local/freeswitch/conf
+      - freeswitch-log:/usr/local/freeswitch/log
+      - freeswitch-db:/usr/local/freeswitch/db
+      - freeswitch-recordings:/usr/local/freeswitch/recordings
+    healthcheck:
+      test: ["CMD", "fs_cli", "-p", "bytedesk123", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  freeswitch-log:
+  freeswitch-db:
+  freeswitch-recordings:
+```
+
+Place the snippet in a `docker-compose.yml` file and run `docker compose up -d`. Update the volume paths if you keep configuration files elsewhere, and align the database credentials with your environment.
+The example assumes an existing MariaDB/MySQL instance reachable at `db.example.com`; adjust the hostname and credentials to match your deployment.
