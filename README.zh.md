@@ -30,10 +30,14 @@
 - [配置说明](#配置说明)
 - [环境变量](#环境变量)
 - [端口说明](#端口说明)
+- [测试验证](#测试验证)
 - [安全建议](#安全建议)
+- [故障排查](#故障排查)
 - [从源码构建](#从源码构建)
 - [CI/CD 工作流](#cicd-工作流)
 - [文档](#文档)
+- [贡献](#贡献)
+- [许可证](#许可证)
 - [技术支持](#技术支持)
 
 ## 快速开始
@@ -91,59 +95,6 @@ docker run -d \
 - ✅ 环境变量配置
 - ✅ 支持多架构（amd64/arm64）
 - ❌ mod_verto 已禁用（改用 SIP over WebSocket）
-
-## CI/CD 工作流概览
-
-本项目使用多个独立的 GitHub Actions 工作流来实现 CI/CD 流程：
-
-### 1. freeswitch-docker.yml - FreeSWITCH 镜像构建工作流
-
-**触发条件：**
-
-- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v0.0.8`）
-- 手动触发（支持自定义版本号）
-- `docker/` 目录变更
-
-**功能：**
-
-- 构建 FreeSWITCH Docker 镜像
-- 推送镜像到阿里云容器镜像服务
-- 推送镜像到 Docker Hub
-- 创建 GitHub Release
-- 自动测试镜像
-
-**输出：**
-
-- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest`
-- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:{version}`
-- Docker 镜像：`bytedesk/freeswitch:latest`
-- Docker 镜像：`bytedesk/freeswitch:{version}`
-- GitHub Release（包含使用文档）
-
-## 工作流关系图
-
-### FreeSWITCH 镜像工作流
-
-```bash
-推送标签 freeswitch-v0.0.8
-或手动触发工作流
-    ↓
-freeswitch-docker.yml 工作流
-    ├── 构建 FreeSWITCH 镜像
-    ├── 推送到阿里云镜像仓库
-    ├── 推送到 Docker Hub
-    ├── 创建 GitHub Release
-    └── 测试镜像功能
-```
-
-## 配置要求
-
-### freeswitch-docker.yml 需要的 Secrets
-
-- `DOCKER_HUB_ACCESS_TOKEN` - Docker Hub 访问令牌
-- `ALIYUN_DOCKER_USERNAME` - 阿里云容器镜像服务用户名
-- `ALIYUN_DOCKER_PASSWORD` - 阿里云容器镜像服务密码
-- `GITHUB_TOKEN` - GitHub 令牌（自动提供）
 
 ## 安装方式
 
@@ -207,6 +158,34 @@ EXTERNAL_IP=203.0.113.10
 ```bash
 docker compose up -d
 ```
+
+## 配置说明
+
+本项目使用多个独立的 GitHub Actions 工作流来实现 CI/CD 流程：
+
+### 1. freeswitch-docker.yml - FreeSWITCH 镜像构建工作流
+
+**触发条件：**
+
+- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v0.0.8`）
+- 手动触发（支持自定义版本号）
+- `docker/` 目录变更
+
+**功能：**
+
+- 构建 FreeSWITCH Docker 镜像
+- 推送镜像到阿里云容器镜像服务
+- 推送镜像到 Docker Hub
+- 创建 GitHub Release
+- 自动测试镜像
+
+**输出：**
+
+- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest`
+- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:{version}`
+- Docker 镜像：`bytedesk/freeswitch:latest`
+- Docker 镜像：`bytedesk/freeswitch:{version}`
+- GitHub Release（包含使用文档）
 
 ## 配置说明
 
@@ -377,110 +356,6 @@ docker run -d \
 
 📖 **详细安全配置请参见 [docker/SECURITY.md](docker/SECURITY.md)**
 
-## 从源码构建
-
-### 前置要求
-
-- 已安装 Docker 和 Docker Compose
-- 已安装 Git
-
-### 构建步骤
-
-1. **克隆仓库：**
-
-   ```bash
-   git clone https://github.com/Bytedesk/bytedesk-freeswitch.git
-   cd bytedesk-freeswitch
-   ```
-
-2. **构建镜像：**
-
-   ```bash
-   cd docker
-   ./build.sh 1.10.12
-   ```
-
-   或手动构建：
-
-   ```bash
-   docker build -t bytedesk/freeswitch:1.10.12 .
-   ```
-
-3. **测试镜像：**
-
-   ```bash
-   docker run -d \
-     --name freeswitch-test \
-     -e FREESWITCH_ESL_PASSWORD=test123 \
-     bytedesk/freeswitch:1.10.12
-   
-   # 查看日志
-   docker logs freeswitch-test
-   
-   # 测试 CLI 访问
-   docker exec -it freeswitch-test fs_cli -p test123
-   ```
-
-更多详情请参见 [docker/BUILD_AND_DEPLOY.md](docker/BUILD_AND_DEPLOY.md)
-
-## CI/CD 工作流
-
-### 发布流程
-
-#### 1. 创建新版本标签
-
-```bash
-# 创建新标签
-git tag v1.0.0
-
-# 推送标签
-git push origin v1.0.0
-```
-
-#### 2. 监控部署状态
-
-在 GitHub 仓库的 Actions 页面查看工作流执行状态。
-
-### FreeSWITCH 镜像发布流程
-
-#### 1. 创建 FreeSWITCH 镜像版本
-
-```bash
-# 创建 FreeSWITCH 标签
-git tag freeswitch-v0.0.8
-
-# 推送标签
-git push origin freeswitch-v0.0.8
-```
-
-#### 2. 手动触发构建（可选）
-
-1. 进入 GitHub Actions 页面
-2. 选择 "Build FreeSWITCH Docker" 工作流
-3. 点击 "Run workflow"
-4. 输入版本号（如 `1.10.12`）
-5. 选择是否推送到镜像仓库
-6. 点击 "Run workflow" 开始构建
-
-#### 3. 使用构建的镜像
-
-```bash
-# 从 Docker Hub 拉取
-docker pull bytedesk/freeswitch:latest
-
-# 从阿里云拉取（中国大陆推荐）
-docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
-
-# 运行容器
-docker run -d \
-  --name freeswitch-bytedesk \
-  -p 5060:5060/tcp -p 5060:5060/udp \
-  -p 8021:8021 \
-  -e FREESWITCH_ESL_PASSWORD='strong_password' \
-  -e FREESWITCH_DEFAULT_PASSWORD='strong_sip_password' \
-  bytedesk/freeswitch:latest
-```
-
 ## 测试验证
 
 ### 1. 检查容器状态
@@ -531,32 +406,6 @@ docker exec -it freeswitch fs_cli -p 您的ESL密码
 
 这将确认 FreeSWITCH 实际使用的配置目录并提供挂载建议。
 
-## 文档
-
-### 主要文档
-
-- **[安全指南](docker/SECURITY.md)** - 🔒 详细的安全配置（必读）
-- **[Docker 文档](docker/README.md)** - 🐳 Docker 相关文档和快速链接
-
-### 工具脚本
-
-- **[配置路径验证脚本](docker/verify_config_path.sh)** - 自动验证配置路径的工具
-
-### 配置文件
-
-- **[Dockerfile](docker/Dockerfile)** - Docker 镜像构建文件
-- **[docker-entrypoint.sh](docker/docker-entrypoint.sh)** - 容器启动脚本
-- **[docker-compose.yml](docker/docker-compose.yml)** - Docker Compose 配置
-- **[.env.example](docker/.env.example)** - 环境变量模板
-
-### 外部资源
-
-- [FreeSWITCH 官方文档](https://freeswitch.org/confluence/)
-- [FreeSWITCH 安全最佳实践](https://freeswitch.org/confluence/display/FREESWITCH/Security)
-- [Docker Hub - bytedesk/freeswitch](https://hub.docker.com/r/bytedesk/freeswitch)
-- [阿里云镜像仓库](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)
-- [微语官方文档](https://docs.bytedesk.com/)
-
 ## 故障排查
 
 ### 容器无法启动
@@ -582,10 +431,137 @@ docker exec -it freeswitch fs_cli -p 您的ESL密码
 ### 认证失败
 
 1. 验证 `FREESWITCH_DEFAULT_PASSWORD` 已设置
-2. 检查 `/usr/local/freeswitch/conf/directory` 中的用户配置
+2. 检查 `/usr/local/freeswitch/etc/freeswitch/directory` 中的用户配置
 3. 查看 SIP 客户端设置
 
 更多问题请参见 [docker/README.md](docker/README.md) 或在 GitHub 创建 Issue。
+
+## 从源码构建
+
+### 前置要求
+
+- 已安装 Docker 和 Docker Compose
+- 已安装 Git
+
+### 构建步骤
+
+1. **克隆仓库：**
+
+   ```bash
+   git clone https://github.com/Bytedesk/bytedesk-freeswitch.git
+   cd bytedesk-freeswitch
+   ```
+
+2. **构建镜像：**
+
+   ```bash
+   cd docker
+   ./build.sh 1.10.12
+   ```
+
+   或手动构建：
+
+   ```bash
+   docker build -t bytedesk/freeswitch:1.10.12 .
+   ```
+
+3. **测试镜像：**
+
+   ```bash
+   docker run -d \
+     --name freeswitch-test \
+     -e FREESWITCH_ESL_PASSWORD=test123 \
+     bytedesk/freeswitch:1.10.12
+   
+   # 查看日志
+   docker logs freeswitch-test
+   
+   # 测试 CLI 访问
+   docker exec -it freeswitch-test fs_cli -p test123
+   ```
+
+## CI/CD 工作流
+
+本项目使用 GitHub Actions 自动构建和发布 Docker 镜像。
+
+### FreeSWITCH 镜像构建工作流
+
+**触发方式：**
+- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v0.0.8`）
+- 手动触发（支持自定义版本号）
+
+**主要功能：**
+- 构建 FreeSWITCH Docker 镜像
+- 推送到阿里云容器镜像服务
+- 推送到 Docker Hub
+- 创建 GitHub Release
+- 自动测试镜像
+
+### 发布新版本
+
+#### 1. 创建 FreeSWITCH 镜像版本
+
+```bash
+# 创建 FreeSWITCH 标签
+git tag freeswitch-v0.0.8
+
+# 推送标签
+git push origin freeswitch-v0.0.8
+```
+
+#### 2. 手动触发构建（可选）
+
+1. 进入 GitHub Actions 页面
+2. 选择 "Build FreeSWITCH Docker" 工作流
+3. 点击 "Run workflow"
+4. 输入版本号（如 `1.10.12`）
+5. 选择是否推送到镜像仓库
+6. 点击 "Run workflow" 开始构建
+
+#### 3. 使用构建的镜像
+
+```bash
+# 从 Docker Hub 拉取
+docker pull bytedesk/freeswitch:latest
+
+# 从阿里云拉取（中国大陆推荐）
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
+
+# 运行容器
+docker run -d \
+  --name freeswitch-bytedesk \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 8021:8021 \
+  -e FREESWITCH_ESL_PASSWORD='strong_password' \
+  -e FREESWITCH_DEFAULT_PASSWORD='strong_sip_password' \
+  bytedesk/freeswitch:latest
+```
+
+## 文档
+
+### 主要文档
+
+- **[安全指南](docker/SECURITY.md)** - 🔒 详细的安全配置（必读）
+- **[Docker 文档](docker/README.md)** - 🐳 Docker 相关文档和快速链接
+
+### 工具脚本
+
+- **[配置路径验证脚本](docker/verify_config_path.sh)** - 自动验证配置路径的工具
+
+### 配置文件
+
+- **[Dockerfile](docker/Dockerfile)** - Docker 镜像构建文件
+- **[docker-entrypoint.sh](docker/docker-entrypoint.sh)** - 容器启动脚本
+- **[docker-compose.yml](docker/docker-compose.yml)** - Docker Compose 配置
+- **[.env.example](docker/.env.example)** - 环境变量模板
+
+### 外部资源
+
+- [FreeSWITCH 官方文档](https://freeswitch.org/confluence/)
+- [FreeSWITCH 安全最佳实践](https://freeswitch.org/confluence/display/FREESWITCH/Security)
+- [Docker Hub - bytedesk/freeswitch](https://hub.docker.com/r/bytedesk/freeswitch)
+- [阿里云镜像仓库](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)
+- [微语官方文档](https://docs.bytedesk.com/)
 
 ## 贡献
 

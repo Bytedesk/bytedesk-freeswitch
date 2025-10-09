@@ -232,6 +232,86 @@ Before deploying to production:
 
 📖 **For detailed security configuration, see [docker/SECURITY.md](docker/SECURITY.md)**
 
+## Testing
+
+### 1. Check Container Status
+
+```bash
+docker ps | grep freeswitch
+```
+
+### 2. View Logs
+
+```bash
+# Real-time logs
+docker logs -f freeswitch
+
+# Last 100 lines
+docker logs --tail 100 freeswitch
+```
+
+### 3. Access FreeSWITCH CLI
+
+```bash
+docker exec -it freeswitch fs_cli -p YOUR_ESL_PASSWORD
+```
+
+### 4. Test with SIP Client
+
+Use [LinPhone](https://www.linphone.org/en/download/) or [Zoiper](https://www.zoiper.com/):
+
+**Configuration:**
+- **Username**: 1000 (or 1001-1019)
+- **Password**: Your `FREESWITCH_DEFAULT_PASSWORD` value
+- **Domain**: Your FreeSWITCH server address
+- **Transport**: UDP (5060) or TCP (5060)
+
+**Test Extensions:**
+- **9196**: Echo test (no delay)
+- **9195**: Echo test (5-second delay)
+- **9664**: Music on hold
+
+### 5. Verify Configuration Path
+
+If you encounter configuration-related issues (e.g., ESL connection failures), verify the configuration path:
+
+```bash
+# Run the verification script
+./docker/verify_config_path.sh
+```
+
+This will confirm which configuration directory FreeSWITCH is actually using and provide mounting recommendations.
+
+## Troubleshooting
+
+### Container Won't Start
+
+1. Check logs: `docker logs freeswitch`
+2. Verify port availability
+3. Check configuration files
+4. Verify permissions
+
+### Cannot Connect to ESL
+
+1. Verify port 8021 is exposed
+2. Check ESL password
+3. Review firewall settings
+4. **Verify configuration path**: Run `./docker/verify_config_path.sh` to ensure you're mounting to the correct path (`/usr/local/freeswitch/etc/freeswitch`)
+
+### Audio Issues
+
+1. Verify RTP port range (16384-32768) is open
+2. Check NAT configuration
+3. Verify `FREESWITCH_EXTERNAL_IP` is set correctly
+
+### Authentication Failures
+
+1. Verify `FREESWITCH_DEFAULT_PASSWORD` is set
+2. Check user configuration in `/usr/local/freeswitch/etc/freeswitch/directory`
+3. Review SIP client settings
+
+For more issues, see [docker/README.md](docker/README.md) or create an issue on GitHub.
+
 ## Building from Source
 
 ### Prerequisites
@@ -276,27 +356,64 @@ Before deploying to production:
    docker exec -it freeswitch-test fs_cli -p test123
    ```
 
-For more details, see [docker/BUILD_AND_DEPLOY.md](docker/BUILD_AND_DEPLOY.md)
-
 ## CI/CD Workflow
 
-### Release Process
+This project uses GitHub Actions to automatically build and publish Docker images.
 
-#### 1. Create a new version tag
+### FreeSWITCH Image Build Workflow
+
+**Trigger methods:**
+- Push a tag starting with `freeswitch-v` (e.g., `freeswitch-v0.0.8`)
+- Manual dispatch (supports custom version)
+
+**Main capabilities:**
+- Build FreeSWITCH Docker image
+- Push to Alibaba Cloud Container Registry
+- Push to Docker Hub
+- Create GitHub Release
+- Automatically test the image
+
+### Release New Version
+
+#### 1. Create a FreeSWITCH image version
 
 ```bash
-# Create a new tag
-git tag v1.0.0
+# Create a FreeSWITCH tag
+git tag freeswitch-v0.0.8
 
 # Push the tag
-git push origin v1.0.0
+git push origin freeswitch-v0.0.8
 ```
 
-#### 2. Monitor deployment status
+#### 2. Manually trigger a build (optional)
 
-Check the workflow run status on the repository's Actions page.
+1. Go to the GitHub Actions page
+2. Select the "Build FreeSWITCH Docker" workflow
+3. Click "Run workflow"
+4. Enter a version (e.g., `1.10.12`)
+5. Choose whether to push to the image registries
+6. Click "Run workflow" to start building
 
-### FreeSWITCH Image Release Flowch)
+#### 3. Use the built image
+
+```bash
+# Pull from Docker Hub
+docker pull bytedesk/freeswitch:latest
+
+# Pull from Alibaba Cloud (recommended in Mainland China)
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
+
+# Run the container
+docker run -d \
+  --name freeswitch-bytedesk \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 8021:8021 \
+  -e FREESWITCH_ESL_PASSWORD='strong_password' \
+  -e FREESWITCH_DEFAULT_PASSWORD='strong_sip_password' \
+  bytedesk/freeswitch:latest
+```
+
+## Documentation
 [![Docker Pulls](https://img.shields.io/docker/pulls/bytedesk/freeswitch)](https://hub.docker.com/r/bytedesk/freeswitch)
 [![License](https://img.shields.io/github/license/Bytedesk/bytedesk-freeswitch)](LICENSE)
 
@@ -326,10 +443,14 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - [Configuration](#configuration)
 - [Environment Variables](#environment-variables)
 - [Ports](#ports)
+- [Testing](#testing)
 - [Security](#security)
+- [Troubleshooting](#troubleshooting)
 - [Building from Source](#building-from-source)
 - [CI/CD Workflow](#cicd-workflow)
 - [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 - [Support](#support)
 
 ## Quick Start
@@ -387,6 +508,8 @@ docker run -d \
 - ✅ Environment variable configuration
 - ✅ Multi-architecture support (amd64/arm64)
 - ❌ mod_verto disabled (use SIP over WebSocket instead)
+
+## Installation
 
 ## CI/CD Workflow Overview
 
@@ -547,8 +670,6 @@ If you encounter configuration-related issues (e.g., ESL connection failures), v
 ./docker/verify_config_path.sh
 ```
 
-This will confirm which configuration directory FreeSWITCH is actually using and provide mounting recommendations.
-
 ## Documentation
 
 ### Main Documentation
@@ -574,36 +695,6 @@ This will confirm which configuration directory FreeSWITCH is actually using and
 - [Docker Hub - bytedesk/freeswitch](https://hub.docker.com/r/bytedesk/freeswitch)
 - [Alibaba Cloud Registry](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)
 - [ByteDesk Official Docs](https://docs.bytedesk.com/)
-
-## Troubleshooting
-
-### Container Won't Start
-
-1. Check logs: `docker logs freeswitch`
-2. Verify port availability
-3. Check configuration files
-4. Verify permissions
-
-### Cannot Connect to ESL
-
-1. Verify port 8021 is exposed
-2. Check ESL password
-3. Review firewall settings
-4. **Verify configuration path**: Run `./docker/verify_config_path.sh` to ensure you're mounting to the correct path (`/usr/local/freeswitch/etc/freeswitch`)
-
-### Audio Issues
-
-1. Verify RTP port range (16384-32768) is open
-2. Check NAT configuration
-3. Verify `FREESWITCH_EXTERNAL_IP` is set correctly
-
-### Authentication Failures
-
-1. Verify `FREESWITCH_DEFAULT_PASSWORD` is set
-2. Check user configuration in `/usr/local/freeswitch/conf/directory`
-3. Review SIP client settings
-
-For more issues, see [docker/README.md](docker/README.md) or create an issue on GitHub.
 
 ## Contributing
 
