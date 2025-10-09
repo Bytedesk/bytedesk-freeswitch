@@ -104,6 +104,8 @@ docker run -d \
 
 ### 方式二：Docker Compose
 
+#### 基础配置（使用内置配置）
+
 创建 `docker-compose.yml` 文件：
 
 ```yaml
@@ -144,6 +146,70 @@ volumes:
   freeswitch-recordings:
 ```
 
+#### 高级配置（使用自定义配置文件）
+
+如果需要自定义配置，挂载配置目录：
+
+```yaml
+version: "3.9"
+
+services:
+  freeswitch:
+    image: bytedesk/freeswitch:latest
+    container_name: freeswitch-bytedesk
+    restart: unless-stopped
+    ports:
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5080:5080/tcp"
+      - "5080:5080/udp"
+      - "8021:8021"
+      - "7443:7443"
+      - "16384-32768:16384-32768/udp"
+    environment:
+      FREESWITCH_ESL_PASSWORD: ${ESL_PASSWORD}
+      FREESWITCH_DEFAULT_PASSWORD: ${SIP_PASSWORD}
+      FREESWITCH_DOMAIN: ${DOMAIN}
+      FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
+      TZ: Asia/Shanghai
+    volumes:
+      # ✅ 挂载自定义配置目录（关键：使用正确的路径）
+      - ./freeswitch-conf:/usr/local/freeswitch/etc/freeswitch
+      # 数据持久化
+      - freeswitch-log:/usr/local/freeswitch/log
+      - freeswitch-db:/usr/local/freeswitch/db
+      - freeswitch-recordings:/usr/local/freeswitch/recordings
+    healthcheck:
+      test: ["CMD", "fs_cli", "-p", "${ESL_PASSWORD}", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  freeswitch-log:
+  freeswitch-db:
+  freeswitch-recordings:
+```
+
+**准备自定义配置文件：**
+
+```bash
+# 1. 导出默认配置到本地
+mkdir -p ./freeswitch-conf
+docker run --rm bytedesk/freeswitch:latest \
+  tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
+
+# 2. 修改配置文件（例如修改 ESL 密码）
+# 编辑 ./freeswitch-conf/autoload_configs/event_socket.conf.xml
+
+# 3. 启动容器（将使用您的自定义配置）
+docker compose up -d
+
+# 4. 验证配置是否生效
+docker exec -it freeswitch-bytedesk fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
+# 应该输出: /usr/local/freeswitch/etc/freeswitch
+```
+
 创建 `.env` 文件（从 `docker/.env.example` 复制）：
 
 ```bash
@@ -158,34 +224,6 @@ EXTERNAL_IP=203.0.113.10
 ```bash
 docker compose up -d
 ```
-
-## 配置说明
-
-本项目使用多个独立的 GitHub Actions 工作流来实现 CI/CD 流程：
-
-### 1. freeswitch-docker.yml - FreeSWITCH 镜像构建工作流
-
-**触发条件：**
-
-- 推送以 `freeswitch-v` 开头的标签（例如：`freeswitch-v0.0.8`）
-- 手动触发（支持自定义版本号）
-- `docker/` 目录变更
-
-**功能：**
-
-- 构建 FreeSWITCH Docker 镜像
-- 推送镜像到阿里云容器镜像服务
-- 推送镜像到 Docker Hub
-- 创建 GitHub Release
-- 自动测试镜像
-
-**输出：**
-
-- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest`
-- Docker 镜像：`registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:{version}`
-- Docker 镜像：`bytedesk/freeswitch:latest`
-- Docker 镜像：`bytedesk/freeswitch:{version}`
-- GitHub Release（包含使用文档）
 
 ## 配置说明
 

@@ -8,6 +8,8 @@ See [Quick Start](#quick-start) section above.
 
 ### Method 2: Docker Compose
 
+#### Basic Setup (Using Built-in Configuration)
+
 Create a `docker-compose.yml` file:
 
 ```yaml
@@ -46,6 +48,70 @@ volumes:
   freeswitch-log:
   freeswitch-db:
   freeswitch-recordings:
+```
+
+#### Advanced Setup (Using Custom Configuration)
+
+If you need custom configuration, mount the configuration directory:
+
+```yaml
+version: "3.9"
+
+services:
+  freeswitch:
+    image: bytedesk/freeswitch:latest
+    container_name: freeswitch-bytedesk
+    restart: unless-stopped
+    ports:
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5080:5080/tcp"
+      - "5080:5080/udp"
+      - "8021:8021"
+      - "7443:7443"
+      - "16384-32768:16384-32768/udp"
+    environment:
+      FREESWITCH_ESL_PASSWORD: ${ESL_PASSWORD}
+      FREESWITCH_DEFAULT_PASSWORD: ${SIP_PASSWORD}
+      FREESWITCH_DOMAIN: ${DOMAIN}
+      FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
+      TZ: Asia/Shanghai
+    volumes:
+      # ✅ Mount custom configuration directory (CRITICAL: use the correct path)
+      - ./freeswitch-conf:/usr/local/freeswitch/etc/freeswitch
+      # Data persistence
+      - freeswitch-log:/usr/local/freeswitch/log
+      - freeswitch-db:/usr/local/freeswitch/db
+      - freeswitch-recordings:/usr/local/freeswitch/recordings
+    healthcheck:
+      test: ["CMD", "fs_cli", "-p", "${ESL_PASSWORD}", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  freeswitch-log:
+  freeswitch-db:
+  freeswitch-recordings:
+```
+
+**Prepare custom configuration files:**
+
+```bash
+# 1. Export default configuration to local directory
+mkdir -p ./freeswitch-conf
+docker run --rm bytedesk/freeswitch:latest \
+  tar -C /usr/local/freeswitch/etc/freeswitch -cf - . | tar -C ./freeswitch-conf -xf -
+
+# 2. Modify configuration files (e.g., change ESL password)
+# Edit ./freeswitch-conf/autoload_configs/event_socket.conf.xml
+
+# 3. Start the container (it will use your custom configuration)
+docker compose up -d
+
+# 4. Verify the configuration is effective
+docker exec -it freeswitch-bytedesk fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
+# Should output: /usr/local/freeswitch/etc/freeswitch
 ```
 
 Create a `.env` file (copy from `docker/.env.example`):
