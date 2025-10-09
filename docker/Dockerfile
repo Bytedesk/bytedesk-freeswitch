@@ -138,6 +138,8 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
         sed -i '/mod_signalwire/s/^[^#]/# &/' build/modules.conf.in; \
     fi && \
+    # 确保启用 databases/mod_mariadb 模块
+    sed -i 's/^#\(databases\/mod_mariadb\)/\1/' build/modules.conf.in && \
     ./bootstrap.sh && \
     # 配置编译选项（根据视频支持参数）
     if [ "${ENABLE_VIDEO}" = "1" ]; then \
