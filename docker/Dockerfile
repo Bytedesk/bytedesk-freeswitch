@@ -14,6 +14,9 @@ ENV FREESWITCH_PREFIX=/usr/local/freeswitch
 ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
 # Initialize LD_LIBRARY_PATH safely (avoid undefined var warning under BuildKit)
 ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
+# Default password for SIP users (can be overridden via FREESWITCH_DEFAULT_PASSWORD env var)
+# WARNING: Change this in production environment for security!
+ENV FREESWITCH_DEFAULT_PASSWORD=1234
 
 # 可选构建参数：
 # BUILD_SIGNALWIRE=1 启用 signalwire-c / mod_signalwire 依赖链 (默认 0)

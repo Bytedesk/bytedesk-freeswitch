@@ -67,6 +67,13 @@ if [ -n "$FREESWITCH_ESL_PASSWORD" ]; then
         ${FREESWITCH_PREFIX}/conf/autoload_configs/event_socket.conf.xml
 fi
 
+# 配置默认密码
+if [ -n "$FREESWITCH_DEFAULT_PASSWORD" ]; then
+    log_info "Setting default password..."
+    sed -i "s/<X-PRE-PROCESS cmd=\"set\" data=\"default_password=.*\"\/>/<X-PRE-PROCESS cmd=\"set\" data=\"default_password=${FREESWITCH_DEFAULT_PASSWORD}\"\/>/g" \
+        ${FREESWITCH_PREFIX}/conf/vars.xml
+fi
+
 # 配置 SIP 域名/IP
 if [ -n "$FREESWITCH_DOMAIN" ]; then
     log_info "Setting SIP domain to ${FREESWITCH_DOMAIN}..."

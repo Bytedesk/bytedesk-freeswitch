@@ -1,6 +1,375 @@
 # ByteDesk FreeSWITCH Docker Image
 
-## Workflow Overview
+[![Docker Hub](https://img.shields.io/docker/v/bytedesk/freeswitch?label=Docker%20Hub)](https://hub.docker.com/## Installation
+
+### Method 1: Docker Run
+
+See [Quick Start](#quick-start) section above.
+
+### Method 2: Docker Compose
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: "3.9"
+
+services:
+  freeswitch:
+    image: bytedesk/freeswitch:latest
+    container_name: freeswitch-bytedesk
+    restart: unless-stopped
+    ports:
+      - "5060:5060/tcp"
+      - "5060:5060/udp"
+      - "5080:5080/tcp"
+      - "5080:5080/udp"
+      - "8021:8021"
+      - "7443:7443"
+      - "16384-32768:16384-32768/udp"
+    environment:
+      FREESWITCH_ESL_PASSWORD: ${ESL_PASSWORD}
+      FREESWITCH_DEFAULT_PASSWORD: ${SIP_PASSWORD}
+      FREESWITCH_DOMAIN: ${DOMAIN}
+      FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
+      TZ: Asia/Shanghai
+    volumes:
+      - freeswitch-log:/usr/local/freeswitch/log
+      - freeswitch-db:/usr/local/freeswitch/db
+      - freeswitch-recordings:/usr/local/freeswitch/recordings
+    healthcheck:
+      test: ["CMD", "fs_cli", "-p", "${ESL_PASSWORD}", "-x", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  freeswitch-log:
+  freeswitch-db:
+  freeswitch-recordings:
+```
+
+Create a `.env` file (copy from `docker/.env.example`):
+
+```bash
+ESL_PASSWORD=MyStr0ng#ESL!Pass2024
+SIP_PASSWORD=MyStr0ng#SIP!Pass2024
+DOMAIN=sip.company.com
+EXTERNAL_IP=203.0.113.10
+```
+
+Start the container:
+
+```bash
+docker compose up -d
+```
+
+## Configuration
+
+### Custom Configuration Files
+
+The container ships with a full FreeSWITCH configuration under `/usr/local/freeswitch/conf`. To run with your own XML files:
+
+1. **Export default configuration:**
+
+   ```bash
+   mkdir -p ./freeswitch-conf
+   docker run --rm bytedesk/freeswitch:latest \
+     tar -C /usr/local/freeswitch/conf -cf - . | tar -C ./freeswitch-conf -xf -
+   ```
+
+2. **Edit XML files locally:**
+   - `vars.xml` & `sip_profiles/internal.xml` - domains, ports, codecs
+   - `autoload_configs/switch.conf.xml` - RTP range, core DB
+   - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` - Database DSNs
+
+3. **Mount custom configuration:**
+
+   ```bash
+   docker run -d \
+     --name freeswitch \
+     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/conf \
+     -p 5060:5060/tcp -p 5060:5060/udp \
+     -p 8021:8021 \
+     -e FREESWITCH_ESL_PASSWORD=password \
+     bytedesk/freeswitch:latest
+   ```
+
+> ℹ️ **Note**: The image contains `/usr/local/freeswitch/etc/freeswitch` from the upstream install, but runtime FreeSWITCH reads configuration exclusively from `/usr/local/freeswitch/conf`. Always use this path for custom configurations.
+
+## Environment Variables
+
+### Core Configuration
+
+| Variable | Description | Default | Required | Security Level |
+|----------|-------------|---------|----------|----------------|
+| `FREESWITCH_ESL_PASSWORD` | ESL management password | - | ✅ Yes | 🔴 High |
+| `FREESWITCH_DEFAULT_PASSWORD` | Default SIP user password | `1234` | ⚠️ Strongly Recommended | 🔴 High |
+| `FREESWITCH_DOMAIN` | SIP domain or IP address | - | No | 🟡 Medium |
+| `FREESWITCH_EXTERNAL_IP` | External IP for NAT traversal | - | No | 🟢 Low |
+| `TZ` | Timezone | `Asia/Shanghai` | No | 🟢 Low |
+
+### RTP Media Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `FREESWITCH_RTP_START` | RTP start port | `16384` | No |
+| `FREESWITCH_RTP_END` | RTP end port | `32768` | No |
+
+### Database Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `FREESWITCH_DB_HOST` | Database host | - | No |
+| `FREESWITCH_DB_NAME` | Database name | - | No |
+| `FREESWITCH_DB_USER` | Database user | `root` | No |
+| `FREESWITCH_DB_PASSWORD` | Database password | - | No |
+| `FREESWITCH_DB_PORT` | Database port | `3306` | No |
+| `FREESWITCH_DB_CHARSET` | Database charset | `utf8mb4` | No |
+| `FREESWITCH_DB_SCHEME` | Core DB connection scheme | `mariadb` | No |
+| `FREESWITCH_DB_ODBC_DIALECT` | ODBC connection dialect | `mysql` | No |
+
+### Configuration Examples
+
+**Development Environment:**
+```bash
+docker run -d \
+  -e FREESWITCH_ESL_PASSWORD=dev123 \
+  -e FREESWITCH_DEFAULT_PASSWORD=test1234 \
+  bytedesk/freeswitch:latest
+```
+
+**Production with Database:**
+```bash
+docker run -d \
+  -e FREESWITCH_ESL_PASSWORD='MyStr0ng#ESL!Pass2024' \
+  -e FREESWITCH_DEFAULT_PASSWORD='MyStr0ng#SIP!Pass2024' \
+  -e FREESWITCH_DOMAIN=sip.company.com \
+  -e FREESWITCH_EXTERNAL_IP=203.0.113.10 \
+  -e FREESWITCH_DB_HOST=mysql.internal \
+  -e FREESWITCH_DB_NAME=freeswitch \
+  -e FREESWITCH_DB_USER=fsuser \
+  -e FREESWITCH_DB_PASSWORD='db_secure_pass' \
+  bytedesk/freeswitch:latest
+```
+
+## Ports
+
+### Required Ports
+
+| Port | Protocol | Description |
+|------|----------|-------------|
+| 5060 | TCP/UDP | SIP internal |
+| 5080 | TCP/UDP | SIP external |
+| 8021 | TCP | ESL management |
+| 7443 | TCP | WebRTC WSS |
+| 16384-32768 | UDP | RTP media |
+
+### Optional Ports
+
+| Port | Protocol | Description |
+|------|----------|-------------|
+| 5061 | TCP | SIP internal TLS |
+| 5081 | TCP | SIP external TLS |
+| 5066 | TCP | WebSocket signaling |
+| 3478-3479 | UDP | STUN service |
+
+## Security
+
+### Password Security
+
+1. **Change ESL Password (Required)**
+   - Use at least 16 characters
+   - Include uppercase, lowercase, numbers, and special characters
+   - Don't use dictionary words
+
+2. **Change SIP Default Password (Strongly Recommended)**
+   - Default is `1234` - extremely weak
+   - Affects users 1000-1019, 1001-brian, 1002-admin
+   - Use strong password: at least 12 characters
+
+3. **Password Strength Examples:**
+   ```
+   ❌ Weak: 123456, password, 1234
+   ⚠️ Medium: test1234, freeswitch123
+   ✅ Strong: Fs#2024@Secure!Pass, MyPbx$Str0ng#2024
+   ```
+
+### Production Checklist
+
+Before deploying to production:
+
+- [ ] Changed `FREESWITCH_ESL_PASSWORD`
+- [ ] Changed `FREESWITCH_DEFAULT_PASSWORD`
+- [ ] Configured `FREESWITCH_EXTERNAL_IP`
+- [ ] Configured firewall rules
+- [ ] Enabled SIP TLS (ports 5061, 5081)
+- [ ] Enabled SRTP encryption
+- [ ] Configured ACL access control
+- [ ] Set up log monitoring
+- [ ] Configured backup strategy
+- [ ] Limited unnecessary port exposure
+- [ ] Configured fail2ban or similar
+- [ ] Reviewed default user configuration
+
+📖 **For detailed security configuration, see [docker/SECURITY.md](docker/SECURITY.md)**
+
+## Building from Source
+
+### Prerequisites
+
+- Docker and Docker Compose installed
+- Git installed
+
+### Build Steps
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/Bytedesk/bytedesk-freeswitch.git
+   cd bytedesk-freeswitch
+   ```
+
+2. **Build the image:**
+
+   ```bash
+   cd docker
+   ./build.sh 1.10.12
+   ```
+
+   Or manually:
+
+   ```bash
+   docker build -t bytedesk/freeswitch:1.10.12 .
+   ```
+
+3. **Test the image:**
+
+   ```bash
+   docker run -d \
+     --name freeswitch-test \
+     -e FREESWITCH_ESL_PASSWORD=test123 \
+     bytedesk/freeswitch:1.10.12
+   
+   # Check logs
+   docker logs freeswitch-test
+   
+   # Test CLI access
+   docker exec -it freeswitch-test fs_cli -p test123
+   ```
+
+For more details, see [docker/BUILD_AND_DEPLOY.md](docker/BUILD_AND_DEPLOY.md)
+
+## CI/CD Workflow
+
+### Release Process
+
+#### 1. Create a new version tag
+
+```bash
+# Create a new tag
+git tag v1.0.0
+
+# Push the tag
+git push origin v1.0.0
+```
+
+#### 2. Monitor deployment status
+
+Check the workflow run status on the repository's Actions page.
+
+### FreeSWITCH Image Release Flowch)
+[![Docker Pulls](https://img.shields.io/docker/pulls/bytedesk/freeswitch)](https://hub.docker.com/r/bytedesk/freeswitch)
+[![License](https://img.shields.io/github/license/Bytedesk/bytedesk-freeswitch)](LICENSE)
+
+FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu 22.04 LTS.
+
+## 🚨 Security Warning
+
+> **⚠️ CRITICAL: Change default passwords before production deployment!**
+> 
+> This image contains default passwords that MUST be changed:
+> 1. **ESL Password**: Set via `FREESWITCH_ESL_PASSWORD` environment variable (required)
+> 2. **SIP User Password**: Set via `FREESWITCH_DEFAULT_PASSWORD` environment variable (default is `1234`)
+> 
+> **Failure to change default passwords can lead to:**
+> - Unauthorized access to your phone system
+> - Toll fraud and financial loss
+> - Call record leakage
+> - System abuse for illegal activities
+> 
+> 📖 See [Security Guide](docker/SECURITY.md) for detailed security configuration.
+
+## 📑 Table of Contents
+
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Environment Variables](#environment-variables)
+- [Ports](#ports)
+- [Security](#security)
+- [Building from Source](#building-from-source)
+- [CI/CD Workflow](#cicd-workflow)
+- [Documentation](#documentation)
+- [Support](#support)
+
+## Quick Start
+
+### Pull and Run (Development)
+
+```bash
+# Pull from Docker Hub
+docker pull bytedesk/freeswitch:latest
+
+# Pull from Alibaba Cloud (recommended for China)
+docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
+
+# Run container
+docker run -d \
+  --name freeswitch \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 8021:8021 \
+  -e FREESWITCH_ESL_PASSWORD='dev_esl_pass_123' \
+  -e FREESWITCH_DEFAULT_PASSWORD='dev_sip_pass_123' \
+  bytedesk/freeswitch:latest
+```
+
+### Production Deployment
+
+```bash
+docker run -d \
+  --name freeswitch-prod \
+  -p 5060:5060/tcp -p 5060:5060/udp \
+  -p 5080:5080/tcp -p 5080:5080/udp \
+  -p 8021:8021 \
+  -p 7443:7443 \
+  -p 16384-32768:16384-32768/udp \
+  -e FREESWITCH_ESL_PASSWORD='YOUR_STRONG_ESL_PASSWORD' \
+  -e FREESWITCH_DEFAULT_PASSWORD='YOUR_STRONG_SIP_PASSWORD' \
+  -e FREESWITCH_DOMAIN=sip.yourdomain.com \
+  -e FREESWITCH_EXTERNAL_IP=YOUR_PUBLIC_IP \
+  -e TZ=Asia/Shanghai \
+  -v freeswitch_data:/usr/local/freeswitch \
+  --restart=unless-stopped \
+  bytedesk/freeswitch:latest
+```
+
+## Features
+
+- ✅ FreeSWITCH 1.10.12 stable release
+- ✅ Based on Ubuntu 22.04 LTS
+- ✅ mod_mariadb module included
+- ✅ MySQL/MariaDB database support
+- ✅ WebRTC support via SIP.js + mod_sofia
+- ✅ Video call support (VP8/VP9/H264)
+- ✅ Basic audio files included (8kHz)
+- ✅ SIP TLS encryption support
+- ✅ Health check enabled
+- ✅ Environment variable configuration
+- ✅ Multi-architecture support (amd64/arm64)
+- ❌ mod_verto disabled (use SIP over WebSocket instead)
+
+## CI/CD Workflow Overview
 
 This project uses multiple independent GitHub Actions workflows to implement the CI/CD pipeline:
 
@@ -106,116 +475,124 @@ docker run -d \
   --name freeswitch-bytedesk \
   -p 5060:5060/tcp -p 5060:5060/udp \
   -p 8021:8021 \
-  -e FREESWITCH_ESL_PASSWORD=password \
+  -e FREESWITCH_ESL_PASSWORD='strong_password' \
+  -e FREESWITCH_DEFAULT_PASSWORD='strong_sip_password' \
   bytedesk/freeswitch:latest
 ```
 
-## Custom configuration
+## Testing
 
-The container ships with a full FreeSWITCH configuration under `/usr/local/freeswitch/conf`. To run with your own XML files:
-
-1. Prepare a config directory on the host (either start from the defaults or your existing deployment):
-
-   ```bash
-   mkdir -p ./freeswitch-conf
-   docker run --rm bytedesk/freeswitch:latest \
-     tar -C /usr/local/freeswitch/conf -cf - . | tar -C ./freeswitch-conf -xf -
-   ```
-
-2. Edit the XML files locally. Common touch-points:
-   - `vars.xml` & `sip_profiles/internal.xml` for domains, ports, codecs.
-   - `autoload_configs/switch.conf.xml` for core behaviour (RTP range, core DB).
-   - `autoload_configs/db.conf.xml` & `autoload_configs/odbc.conf.xml` for ODBC/`mod_mariadb` DSNs.
-
-3. Mount the folder into the container so FreeSWITCH boots with your files:
-
-   ```bash
-   docker run -d \
-     --name freeswitch-bytedesk \
-     -v $(pwd)/freeswitch-conf:/usr/local/freeswitch/conf \
-     -p 5060:5060/tcp -p 5060:5060/udp \
-     -p 8021:8021 \
-     -e FREESWITCH_ESL_PASSWORD=password \
-     bytedesk/freeswitch:latest
-   ```
-
-> ℹ️ The image also contains `/usr/local/freeswitch/etc/freeswitch`, which is left over from the upstream install tree. Runtime FreeSWITCH reads configuration exclusively from `/usr/local/freeswitch/conf` (verified against `registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest`), so mount or edit that path when supplying custom XML files.
-
-### Environment overrides for database DSNs
-
-If you prefer to keep the bundled XML files and only swap database connectivity, set the following environment variables when starting the container. The entrypoint rewrites `switch.conf.xml`, `db.conf.xml`, and `odbc.conf.xml` automatically:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `FREESWITCH_DB_HOST` | Database host (required to trigger rewrite) | - |
-| `FREESWITCH_DB_NAME` | Database schema | - |
-| `FREESWITCH_DB_USER` | Database user | `root` |
-| `FREESWITCH_DB_PASSWORD` | Database password | empty |
-| `FREESWITCH_DB_PORT` | Database port | `3306` |
-| `FREESWITCH_DB_CHARSET` | Charset for ODBC DSN | `utf8mb4` |
-| `FREESWITCH_DB_SCHEME` | DSN scheme for FreeSWITCH core (`mariadb`, `mysql`, `pgsql`, ...) | `mariadb` |
-| `FREESWITCH_DB_ODBC_DIALECT` | Prefix for ODBC DSN (`mysql`/`mariadb`) | `mysql` |
-
-Example:
+### 1. Check Container Status
 
 ```bash
-docker run -d \
-  --name freeswitch-bytedesk \
-  -e FREESWITCH_DB_HOST=db.internal \
-  -e FREESWITCH_DB_NAME=freeswitch_prod \
-  -e FREESWITCH_DB_USER=fs_user \
-  -e FREESWITCH_DB_PASSWORD=secret \
-  -e FREESWITCH_DB_PORT=3307 \
-  -e FREESWITCH_DB_SCHEME=mariadb \
-  -e FREESWITCH_DB_ODBC_DIALECT=mariadb \
-  bytedesk/freeswitch:latest
+docker ps | grep freeswitch
 ```
 
-After the container starts, you can verify the rewritten DSN values by inspecting the mounted files or reading `/usr/local/freeswitch/conf/autoload_configs/*.xml` inside the container.
+### 2. View Logs
 
-### Docker Compose example
+```bash
+# Real-time logs
+docker logs -f freeswitch
 
-For repeatable deployments, you can manage the container with Docker Compose:
-
-```yaml
-version: "3.9"
-
-services:
-  freeswitch:
-    image: bytedesk/freeswitch:latest
-    container_name: freeswitch-bytedesk
-    restart: unless-stopped
-    ports:
-      - "5060:5060/tcp"
-      - "5060:5060/udp"
-      - "5080:5080/tcp"
-      - "5080:5080/udp"
-      - "8021:8021"
-      - "7443:7443"
-      - "16384-32768:16384-32768/udp"
-    environment:
-      FREESWITCH_ESL_PASSWORD: bytedesk123
-      FREESWITCH_DB_HOST: db.example.com
-      FREESWITCH_DB_NAME: freeswitch
-      FREESWITCH_DB_USER: fs_user
-      FREESWITCH_DB_PASSWORD: fs_secret
-      TZ: Asia/Shanghai
-    volumes:
-      - ./freeswitch-conf:/usr/local/freeswitch/conf
-      - freeswitch-log:/usr/local/freeswitch/log
-      - freeswitch-db:/usr/local/freeswitch/db
-      - freeswitch-recordings:/usr/local/freeswitch/recordings
-    healthcheck:
-      test: ["CMD", "fs_cli", "-p", "bytedesk123", "-x", "status"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-volumes:
-  freeswitch-log:
-  freeswitch-db:
-  freeswitch-recordings:
+# Last 100 lines
+docker logs --tail 100 freeswitch
 ```
 
-Place the snippet in a `docker-compose.yml` file and run `docker compose up -d`. Update the volume paths if you keep configuration files elsewhere, and align the database credentials with your environment.
-The example assumes an existing MariaDB/MySQL instance reachable at `db.example.com`; adjust the hostname and credentials to match your deployment.
+### 3. Access FreeSWITCH CLI
+
+```bash
+docker exec -it freeswitch fs_cli -p YOUR_ESL_PASSWORD
+```
+
+### 4. Test with SIP Client
+
+Use [LinPhone](https://www.linphone.org/en/download/) or [Zoiper](https://www.zoiper.com/):
+
+**Configuration:**
+- **Username**: 1000 (or 1001-1019)
+- **Password**: Your `FREESWITCH_DEFAULT_PASSWORD` value
+- **Domain**: Your FreeSWITCH server address
+- **Transport**: UDP (5060) or TCP (5060)
+
+**Test Extensions:**
+- **9196**: Echo test (no delay)
+- **9195**: Echo test (5-second delay)
+- **9664**: Music on hold
+
+## Documentation
+
+### Main Documentation
+
+- **[Security Guide](docker/SECURITY.md)** - 🔒 Detailed security configuration (MUST READ)
+- **[Quick Start Guide](docker/QUICKSTART.md)** - Fast setup guide
+- **[Build & Deploy Guide](docker/BUILD_AND_DEPLOY.md)** - Building and deployment instructions
+- **[Password Configuration](docker/PASSWORD_UPDATE.md)** - Password management guide
+- **[Push Guide](docker/PUSH_GUIDE.md)** - Image registry push guide
+
+### Configuration Files
+
+- **[Dockerfile](docker/Dockerfile)** - Docker image build file
+- **[docker-entrypoint.sh](docker/docker-entrypoint.sh)** - Container startup script
+- **[docker-compose.yml](docker/docker-compose.yml)** - Docker Compose configuration
+- **[.env.example](docker/.env.example)** - Environment variable template
+
+### External Resources
+
+- [FreeSWITCH Official Documentation](https://freeswitch.org/confluence/)
+- [FreeSWITCH Security Best Practices](https://freeswitch.org/confluence/display/FREESWITCH/Security)
+- [Docker Hub - bytedesk/freeswitch](https://hub.docker.com/r/bytedesk/freeswitch)
+- [Alibaba Cloud Registry](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)
+- [ByteDesk Official Docs](https://docs.bytedesk.com/)
+
+## Troubleshooting
+
+### Container Won't Start
+
+1. Check logs: `docker logs freeswitch`
+2. Verify port availability
+3. Check configuration files
+4. Verify permissions
+
+### Cannot Connect to ESL
+
+1. Verify port 8021 is exposed
+2. Check ESL password
+3. Review firewall settings
+
+### Audio Issues
+
+1. Verify RTP port range (16384-32768) is open
+2. Check NAT configuration
+3. Verify `FREESWITCH_EXTERNAL_IP` is set correctly
+
+### Authentication Failures
+
+1. Verify `FREESWITCH_DEFAULT_PASSWORD` is set
+2. Check user configuration in `/usr/local/freeswitch/conf/directory`
+3. Review SIP client settings
+
+For more issues, see [docker/README.md](docker/README.md) or create an issue on GitHub.
+
+## Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+
+## Support
+
+- **Email**: support@bytedesk.com
+- **GitHub Issues**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
+- **Documentation**: https://docs.bytedesk.com/
+
+---
+
+**Maintained by**: [ByteDesk](https://bytedesk.com)  
+**Last Updated**: 2025-10-09

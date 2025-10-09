@@ -42,6 +42,10 @@ services:
       # ESL 密码 (必填)
       - FREESWITCH_ESL_PASSWORD=bytedesk123
       
+      # 默认 SIP 用户密码 (强烈建议修改)
+      # 警告：此密码用于 SIP 用户认证，默认为 1234，生产环境必须修改！
+      - FREESWITCH_DEFAULT_PASSWORD=secure_password_here
+      
       # SIP 域名 (替换为您的域名或 IP)
       - FREESWITCH_DOMAIN=localhost
       
