@@ -36,14 +36,18 @@ RUN apt-get update && apt-get upgrade -y && \
     libssl-dev libcrypto++-dev libgnutls28-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 编译安装 libks
-RUN git clone https://github.com/signalwire/libks.git && \
-    cd libks && \
-    cmake . -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    make && make install && \
-    ldconfig && \
-    cd .. && rm -rf libks
+# 编译安装 libks（仅当需要 signalwire 支持时）
+RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
+            echo "Building libks (required for mod_signalwire)"; \
+            git clone --depth 1 https://github.com/signalwire/libks.git && \
+            cd libks && \
+            cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+            make -j"$(nproc)" && make install && \
+            ldconfig && \
+            cd .. && rm -rf libks; \
+        else \
+            echo "Skipping libks (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
+        fi
 
 # 可选：编译安装 signalwire-c（仅当需要 mod_signalwire 时启用）
 RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
@@ -107,13 +111,19 @@ RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz &
 # 编译安装 FreeSWITCH
 RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.git && \
     cd freeswitch && \
+    # 若不构建 mod_signalwire，则在构建前修改 modules.conf 禁用它，避免 configure 失败
+    if [ "${BUILD_SIGNALWIRE}" != "1" ]; then \
+        if grep -q '^applications/mod_signalwire' modules.conf 2>/dev/null; then \
+            sed -i 's/^applications\/mod_signalwire/# applications\/mod_signalwire (disabled)/' modules.conf; \
+        fi; \
+    fi && \
     ./bootstrap.sh && \
     ./configure --prefix=${FREESWITCH_PREFIX} \
                 --enable-core-odbc-support \
                 --enable-core-pgsql-support && \
     # 修改 Makefile 移除 -Werror
     sed -i 's/-Werror //g' src/mod/applications/mod_av/Makefile && \
-    make && make install && \
+    make -j"$(nproc)" && make install && \
     # 编译 mod_mariadb 模块
     make mod_mariadb && \
     make mod_mariadb-install && \
