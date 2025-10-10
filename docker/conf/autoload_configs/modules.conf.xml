@@ -91,7 +91,7 @@
     <!--<load module="mod_cluechoo"/>-->
     <load module="mod_valet_parking" />
     <!--<load module="mod_fsk"/>-->
-    <!--<load module="mod_spy"/>-->
+    <load module="mod_spy"/> <!-- 监听/窃听/耳语模块（呼叫中心质检必备） -->
     <!--<load module="mod_sms"/>-->
     <!--<load module="mod_sms_flowroute"/>-->
     <!--<load module="mod_smpp"/>-->

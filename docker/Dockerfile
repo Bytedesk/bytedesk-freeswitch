@@ -167,6 +167,7 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     sed -i 's/^#\(applications\/mod_cidlookup\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_nibblebill\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_easyroute\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_spy\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(languages\/mod_python3\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(languages\/mod_java\)/\1/' build/modules.conf.in && \
     ./bootstrap.sh && \

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  呼叫中心监听/质检功能 Dialplan 配置
+  
+  功能说明：
+  - 88 + 分机号 = 监听座席（Eavesdrop）
+  - 89 + 分机号 = 耳语座席（Whisper）
+  - 90 + 分机号 = 强插通话（Barge）
+  - 87 + UUID = 通过 UUID 直接监听（用于 Web 界面）
+-->
+<include>
+  
+  <!-- ============================================
+       监听功能：88 + 分机号
+       示例：拨打 881001 监听 1001 座席
+       主管能听到座席和客户的对话，但不能说话
+       ============================================ -->
+  <extension name="eavesdrop_monitor">
+    <condition field="destination_number" expression="^88(\d{4})$">
+      <!-- 记录日志 -->
+      <action application="log" data="INFO Supervisor ${caller_id_number} monitoring extension $1"/>
+      
+      <!-- 应答通话 -->
+      <action application="answer"/>
+      <action application="sleep" data="500"/>
+      
+      <!-- 播放提示音：您正在进入监听模式 -->
+      <action application="playback" data="tone_stream://%(200,100,500,600,700)"/>
+      
+      <!-- 查找目标座席的活动通话 UUID -->
+      <action application="set" data="target_uuid=${db(select/agent_uuid/$1)}"/>
+      
+      <!-- 设置监听参数 -->
+      <action application="set" data="eavesdrop_require_group=supervisor"/>
+      <action application="set" data="eavesdrop_indicate_failed=tone_stream://%(500,0,320)"/>
+      <action application="set" data="eavesdrop_indicate_new=tone_stream://%(500,0,620)"/>
+      
+      <!-- 可选：录制监听会话 -->
+      <!-- <action application="set" data="RECORD_STEREO=true"/> -->
+      <!-- <action application="record_session" data="/recordings/monitor_${caller_id_number}_$1_${strftime(%Y%m%d_%H%M%S)}.wav"/> -->
+      
+      <!-- 可选：记录监听日志到数据库 -->
+      <!-- <action application="lua" data="log_monitoring.lua $1 eavesdrop"/> -->
+      
+      <!-- 开始监听（双向音频） -->
+      <action application="eavesdrop" data="$1"/>
+      
+      <!-- 如果监听失败，播放提示音 -->
+      <action application="playback" data="ivr/ivr-no_user_response.wav"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+  
+  
+  <!-- ============================================
+       耳语功能：89 + 分机号
+       示例：拨打 891001 对 1001 座席耳语
+       主管说话只有座席能听到，客户听不到
+       用于指导座席，不打断通话流程
+       ============================================ -->
+  <extension name="whisper_coaching">
+    <condition field="destination_number" expression="^89(\d{4})$">
+      <!-- 记录日志 -->
+      <action application="log" data="INFO Supervisor ${caller_id_number} whispering to extension $1"/>
+      
+      <!-- 应答通话 -->
+      <action application="answer"/>
+      <action application="sleep" data="500"/>
+      
+      <!-- 播放提示音：您正在进入耳语模式 -->
+      <action application="playback" data="tone_stream://%(200,100,800,900)"/>
+      
+      <!-- 查找目标座席的 UUID -->
+      <action application="set" data="target_uuid=${db(select/agent_uuid/$1)}"/>
+      
+      <!-- 可选：录制耳语会话 -->
+      <!-- <action application="record_session" data="/recordings/whisper_${caller_id_number}_$1_${strftime(%Y%m%d_%H%M%S)}.wav"/> -->
+      
+      <!-- 开始耳语（主管说话，只有座席能听到） -->
+      <action application="eavesdrop" data="$1 whisper"/>
+      
+      <!-- 如果失败，播放提示音 -->
+      <action application="playback" data="ivr/ivr-no_user_response.wav"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+  
+  
+  <!-- ============================================
+       强插功能：90 + 分机号
+       示例：拨打 901001 强插 1001 座席的通话
+       主管加入三方通话，所有人都能听到
+       用于紧急情况处理、投诉介入等
+       ============================================ -->
+  <extension name="barge_intervention">
+    <condition field="destination_number" expression="^90(\d{4})$">
+      <!-- 记录日志 -->
+      <action application="log" data="INFO Supervisor ${caller_id_number} barging into extension $1"/>
+      
+      <!-- 应答通话 -->
+      <action application="answer"/>
+      <action application="sleep" data="500"/>
+      
+      <!-- 播放提示音：您正在加入通话 -->
+      <action application="playback" data="tone_stream://%(200,100,1000,1100,1200)"/>
+      
+      <!-- 查找目标座席的 UUID -->
+      <action application="set" data="target_uuid=${db(select/agent_uuid/$1)}"/>
+      
+      <!-- 可选：录制强插会话 -->
+      <!-- <action application="set" data="RECORD_STEREO=true"/> -->
+      <!-- <action application="record_session" data="/recordings/barge_${caller_id_number}_$1_${strftime(%Y%m%d_%H%M%S)}.wav"/> -->
+      
+      <!-- 强插模式（三方通话） -->
+      <action application="eavesdrop" data="$1 barge"/>
+      
+      <!-- 如果失败，播放提示音 -->
+      <action application="playback" data="ivr/ivr-no_user_response.wav"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+  
+  
+  <!-- ============================================
+       UUID 监听：87 + UUID
+       示例：拨打 87xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+       通过完整 UUID 直接监听，主要用于 Web 界面集成
+       ============================================ -->
+  <extension name="eavesdrop_by_uuid">
+    <condition field="destination_number" expression="^87([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$">
+      <action application="log" data="INFO Supervisor ${caller_id_number} monitoring UUID $1"/>
+      <action application="answer"/>
+      <action application="eavesdrop" data="$1"/>
+      <action application="hangup"/>
+    </condition>
+  </extension>
+  
+</include>
