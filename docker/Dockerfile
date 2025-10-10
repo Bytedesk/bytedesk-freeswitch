@@ -127,6 +127,7 @@ RUN git clone --depth 1 -b release/4.4 https://github.com/FFmpeg/FFmpeg.git && \
     ./configure --enable-shared \
                 --disable-static \
                 --enable-pic \
+                --enable-gpl \
                 --enable-libopus \
                 --enable-libvpx \
                 --enable-libx264 \
@@ -248,6 +249,12 @@ RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \
 
 # 复制配置文件
 COPY conf/ ${FREESWITCH_PREFIX}/conf/
+
+# 配置 ODBC（复制 ODBC 配置文件到系统目录）
+RUN mkdir -p /etc/odbc && \
+    cp ${FREESWITCH_PREFIX}/conf/odbc.ini /etc/odbc.ini && \
+    cp ${FREESWITCH_PREFIX}/conf/odbcinst.ini /etc/odbcinst.ini && \
+    chmod 644 /etc/odbc.ini /etc/odbcinst.ini
 
 # 创建数据目录
 RUN mkdir -p ${FREESWITCH_PREFIX}/log \

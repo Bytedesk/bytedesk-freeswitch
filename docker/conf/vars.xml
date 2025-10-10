@@ -490,8 +490,9 @@
   <X-PRE-PROCESS cmd="set" data="db_port=3306"/>
   <X-PRE-PROCESS cmd="set" data="db_name=bytedesk"/>
   
-  <!-- ODBC Connection String -->
-  <X-PRE-PROCESS cmd="set" data="odbc_dsn=mysql:host=${db_host};port=${db_port};database=${db_name};uid=${db_username};pwd=${db_password};charset=utf8mb4"/>
+  <!-- ODBC DSN Name (format: dsn:username:password) -->
+  <!-- DSN 'freeswitch' 定义在 /etc/odbc.ini 中 -->
+  <X-PRE-PROCESS cmd="set" data="odbc_dsn=freeswitch:${db_username}:${db_password}"/>
   
   <!-- ByteDesk API Endpoints Configuration -->
   <X-PRE-PROCESS cmd="set" data="api_base_url=http://124.220.58.234:9003"/>

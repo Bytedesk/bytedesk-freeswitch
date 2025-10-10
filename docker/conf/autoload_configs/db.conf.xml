@@ -1,8 +1,8 @@
 <configuration name="db.conf" description="LIMIT DB Configuration">
   <settings>
-    <!-- 默认 MySQL/MariaDB 数据库连接，可通过环境变量覆盖 -->
-    <param name="odbc-dsn"
-      value="mysql:host=bytedesk-mysql;port=3306;database=bytedesk;uid=root;pwd=r8FqfdbWUaN3;charset=utf8mb4" />
+    <!-- ODBC DSN 连接格式: dsn:username:password -->
+    <!-- DSN 名称 'freeswitch' 定义在 /etc/odbc.ini 中 -->
+    <param name="odbc-dsn" value="freeswitch:root:r8FqfdbWUaN3" />
 
     <!-- 连接池设置 -->
     <param name="max-connections" value="25" />

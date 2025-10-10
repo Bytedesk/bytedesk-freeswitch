@@ -1,8 +1,10 @@
 <!-- FreeSwitch Directory配置 - 支持从MySQL数据库加载用户 -->
 <configuration name="directory.conf" description="Directory Configuration">
   <settings>
-    <!-- MySQL数据库连接 -->
-    <param name="odbc-dsn" value="mysql:host=124.220.58.234;port=3306;database=bytedesk;uid=root;pwd=nDWXYLK6QQTr;charset=utf8mb4"/>
+    <!-- ODBC DSN 连接格式: dsn:username:password -->
+    <!-- DSN 名称 'freeswitch' 定义在 /etc/odbc.ini 中 -->
+    <!-- 注意：如果不需要从数据库加载用户，可以注释掉此参数 -->
+    <!--<param name="odbc-dsn" value="freeswitch:root:r8FqfdbWUaN3"/>-->
     
     <!-- 缓存设置 -->
     <param name="cache-expire" value="300"/>
