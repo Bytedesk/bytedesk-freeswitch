@@ -33,6 +33,8 @@
     <!-- <load module="mod_snmp"/> -->
     <!-- ODBC CDR - 通过 ODBC 将 CDR 记录写入数据库 -->
     <load module="mod_odbc_cdr" />
+    <!-- JSON CDR - 现代化的 JSON 格式 CDR 记录⭐⭐⭐⭐ -->
+    <load module="mod_json_cdr" />
     <!-- Fail2ban - 安全防护，防止暴力破解 -->
     <load module="mod_fail2ban" />
 
@@ -92,6 +94,10 @@
     <load module="mod_valet_parking" />
     <!--<load module="mod_fsk"/>-->
     <load module="mod_spy"/> <!-- 监听/窃听/耳语模块（呼叫中心质检必备） -->
+    <!-- 强烈推荐的呼叫中心模块 -->
+    <load module="mod_avmd"/> <!-- 答录机检测（外呼必备）⭐⭐⭐⭐⭐ -->
+    <load module="mod_directory"/> <!-- 企业通讯录（座席效率）⭐⭐⭐⭐ -->
+    <load module="mod_voicemail_ivr"/> <!-- 增强型语音邮箱（完整功能）⭐⭐⭐⭐ -->
     <!--<load module="mod_sms"/>-->
     <!--<load module="mod_sms_flowroute"/>-->
     <!--<load module="mod_smpp"/>-->

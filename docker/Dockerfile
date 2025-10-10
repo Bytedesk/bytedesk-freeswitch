@@ -168,6 +168,11 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     sed -i 's/^#\(applications\/mod_nibblebill\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_easyroute\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_spy\)/\1/' build/modules.conf.in && \
+    # 启用强烈推荐的呼叫中心模块
+    sed -i 's/^#\(applications\/mod_avmd\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_directory\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_voicemail_ivr\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(event_handlers\/mod_json_cdr\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(languages\/mod_python3\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(languages\/mod_java\)/\1/' build/modules.conf.in && \
     ./bootstrap.sh && \
