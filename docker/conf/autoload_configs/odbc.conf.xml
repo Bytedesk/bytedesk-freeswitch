@@ -5,23 +5,25 @@
     MySQL连接配置 
     使用与Bytedesk应用相同的数据库连接信息
     -->
-    <param name="max-connections" value="25"/>
-    <param name="pre-connect" value="true"/>
-    
+    <param name="max-connections" value="25" />
+    <param name="pre-connect" value="true" />
+
     <!-- MySQL数据源配置 -->
-    <param name="enable-pool-events" value="false"/>
+    <param name="enable-pool-events" value="false" />
   </settings>
-  
+
   <!-- 数据库连接池 -->
   <databases>
-    <!-- 默认 MySQL/MariaDB 数据库连接，可通过环境变量覆盖 -->
+    <!-- 默认 MySQL/MariaDB 数据库连接，通过 docker-entrypoint.sh 从环境变量动态配置 -->
+    <!-- 环境变量: FREESWITCH_DB_HOST, FREESWITCH_DB_PORT, FREESWITCH_DB_NAME, FREESWITCH_DB_USER, FREESWITCH_DB_PASSWORD -->
     <database name="default">
-  <param name="dsn" value="mysql:host=bytedesk-mysql;port=3306;database=bytedesk;uid=root;pwd=r8FqfdbWUaN3;charset=utf8mb4"/>
-      <param name="max-connections" value="25"/>
-      <param name="pre-connect" value="5"/>
-      <param name="auto-commit" value="true"/>
-      <param name="connection-timeout" value="10"/>
-      <param name="query-timeout" value="30"/>
+      <param name="dsn"
+        value="mysql:host=${db_host};port=${db_port};database=${db_name};uid=${db_username};pwd=${db_password};charset=utf8mb4" />
+      <param name="max-connections" value="25" />
+      <param name="pre-connect" value="5" />
+      <param name="auto-commit" value="true" />
+      <param name="connection-timeout" value="10" />
+      <param name="query-timeout" value="30" />
     </database>
   </databases>
 </configuration>

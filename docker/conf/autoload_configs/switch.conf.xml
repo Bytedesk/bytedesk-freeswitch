@@ -190,10 +190,11 @@
     <!-- <param name="core-db-dsn"
     value="postgresql://freeswitch:@127.0.0.1/freeswitch?options=-c%20client_min_messages%3DNOTICE"
     /> -->
+    <!-- 使用 vars.xml 中定义的数据库变量，通过 docker-entrypoint.sh 动态配置 -->
     <param name="core-db-dsn"
-      value="mariadb://Server=bytedesk-mysql;Port=3306;Database=bytedesk;Uid=root;Pwd=r8FqfdbWUaN3;" />
-    <!-- 配置数据库表前缀 -->
-    <param name="core-db-table-prefix" value="freeswitch_" />
+      value="mariadb://Server=${db_host};Port=${db_port};Database=${db_name};Uid=${db_username};Pwd=${db_password};" />
+    <!-- 配置数据库表前缀，此配置没用 -->
+    <!-- <param name="core-db-table-prefix" value="freeswitch_" /> -->
     <!-- <param name="core-db-dsn" value="dsn:username:password" /> -->
     <!-- <param name="odbc-skip-autocommit-flip" value="true" /> -->
 

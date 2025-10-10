@@ -14,9 +14,9 @@
       docker-entrypoint.sh 会自动配置 odbc.conf.xml 中的 DSN
     -->
     
-    <!-- 数据库 DSN 名称，将使用 odbc.conf.xml 中配置的 DSN -->
-    <!-- 环境变量配置后，DSN 格式为：mysql:host=xxx;port=xxx;database=xxx;uid=xxx;pwd=xxx;charset=utf8mb4 -->
-    <param name="odbc-dsn" value="$${odbc_dsn:freeswitch}"/>
+    <!-- 数据库 DSN 名称，引用 odbc.conf.xml 中定义的数据库连接 -->
+    <!-- 使用 'default' 引用 odbc.conf.xml 中的 <database name="default"> -->
+    <param name="odbc-dsn" value="default"/>
     
     <!-- CDR 日志 - 记录到 FreeSWITCH 日志文件 -->
     <param name="log-b-leg" value="true"/>

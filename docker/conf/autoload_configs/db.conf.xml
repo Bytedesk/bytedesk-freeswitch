@@ -2,14 +2,7 @@
   <settings>
     <!-- ODBC DSN 连接格式: dsn:username:password -->
     <!-- DSN 名称 'freeswitch' 定义在 /etc/odbc.ini 中 -->
-    <param name="odbc-dsn" value="freeswitch:root:r8FqfdbWUaN3" />
-
-    <!-- 连接池设置 -->
-    <param name="max-connections" value="25" />
-    <param name="pre-connect" value="5" />
-
-    <!-- 连接超时设置 -->
-    <param name="connection-timeout" value="10" />
-    <param name="query-timeout" value="30" />
+    <!-- 使用 vars.xml 中定义的变量 (odbc_dsn=freeswitch:root:r8FqfdbWUaN3) -->
+    <param name="odbc-dsn" value="$${odbc_dsn}" />
   </settings>
 </configuration>

@@ -484,9 +484,10 @@
   <X-PRE-PROCESS cmd="set" data="disable_rtp_auto_adjust=false"/>
   
   <!-- ByteDesk Database Configuration -->
+  <!-- 与 odbc.ini 保持一致，使用 Docker Compose 服务名 -->
   <X-PRE-PROCESS cmd="set" data="db_username=root"/>
-  <X-PRE-PROCESS cmd="set" data="db_password=nDWXYLK6QQTr"/>
-  <X-PRE-PROCESS cmd="set" data="db_host=124.220.58.234"/>
+  <X-PRE-PROCESS cmd="set" data="db_password=r8FqfdbWUaN3"/>
+  <X-PRE-PROCESS cmd="set" data="db_host=bytedesk-mysql"/>
   <X-PRE-PROCESS cmd="set" data="db_port=3306"/>
   <X-PRE-PROCESS cmd="set" data="db_name=bytedesk"/>
   
@@ -495,7 +496,8 @@
   <X-PRE-PROCESS cmd="set" data="odbc_dsn=freeswitch:${db_username}:${db_password}"/>
   
   <!-- ByteDesk API Endpoints Configuration -->
-  <X-PRE-PROCESS cmd="set" data="api_base_url=http://124.220.58.234:9003"/>
+  <!-- 使用 Docker Compose 服务名或环境变量配置 -->
+  <X-PRE-PROCESS cmd="set" data="api_base_url=http://bytedesk-api:9003"/>
   <X-PRE-PROCESS cmd="set" data="cdr_url=${api_base_url}/freeswitch/api/v1/cdr"/>
   <X-PRE-PROCESS cmd="set" data="user_lookup_url=${api_base_url}/freeswitch/api/v1/user"/>
   
