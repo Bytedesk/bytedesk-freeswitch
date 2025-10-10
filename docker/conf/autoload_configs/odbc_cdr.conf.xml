@@ -1,22 +1,9 @@
 <configuration name="odbc_cdr.conf" description="ODBC CDR Configuration">
   <settings>
-    <!-- 
-      ODBC CDR 模块配置
-      用于将呼叫详单记录(CDR)通过 ODBC 写入数据库
-      
-      数据库连接使用 ODBC DSN，需要在启动时通过环境变量配置：
-      - FREESWITCH_DB_HOST
-      - FREESWITCH_DB_NAME
-      - FREESWITCH_DB_USER
-      - FREESWITCH_DB_PASSWORD
-      - FREESWITCH_DB_PORT
-      
-      docker-entrypoint.sh 会自动配置 odbc.conf.xml 中的 DSN
-    -->
-    
-    <!-- 数据库 DSN 名称，引用 odbc.conf.xml 中定义的数据库连接 -->
-    <!-- 使用 'default' 引用 odbc.conf.xml 中的 <database name="default"> -->
-    <param name="odbc-dsn" value="default"/>
+    <!-- 数据库 DSN 名称 -->
+    <!-- 连接信息在 vars.xml 中统一配置，通过 $${legacy_odbc_dsn} 变量引用 -->
+    <!-- 格式: dsn:username:password -->
+    <!-- <param name="odbc-dsn" value="$${legacy_odbc_dsn}"/> -->
     
     <!-- CDR 日志 - 记录到 FreeSWITCH 日志文件 -->
     <param name="log-b-leg" value="true"/>

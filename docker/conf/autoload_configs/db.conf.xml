@@ -1,8 +1,8 @@
 <configuration name="db.conf" description="LIMIT DB Configuration">
   <settings>
-    <!-- ODBC DSN 连接格式: dsn:username:password -->
-    <!-- DSN 名称 'freeswitch' 定义在 /etc/odbc.ini 中 -->
-    <!-- 使用 vars.xml 中定义的变量 (odbc_dsn=freeswitch:root:r8FqfdbWUaN3) -->
-    <param name="odbc-dsn" value="$${odbc_dsn}" />
+    <!-- Bytedesk MySQL数据库连接 -->
+    <!-- 连接信息在 vars.xml 中统一配置，通过 $${legacy_odbc_dsn} 变量引用 -->
+    <!-- 格式: dsn:username:password -->
+    <!-- <param name="odbc-dsn" value="$${legacy_odbc_dsn}"/> -->
   </settings>
 </configuration>
