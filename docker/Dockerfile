@@ -120,12 +120,26 @@ RUN git clone https://github.com/freeswitch/spandsp && \
 
 # 使用系统提供的 Lua 5.3（通过 apt 安装），无需从源码编译
 
-# 编译安装 libav
-RUN git clone -b release/12 https://github.com/libav/libav.git && \
-    cd libav && \
-    CFLAGS=-fPIC ./configure --enable-pic --enable-shared && \
-    make && make install && \
-    cd .. && rm -rf libav
+# 编译安装 FFmpeg（mod_av 需要 FFmpeg 而不是 libav）
+# 使用 FFmpeg 4.4 LTS 版本以确保兼容性
+RUN git clone --depth 1 -b release/4.4 https://github.com/FFmpeg/FFmpeg.git && \
+    cd FFmpeg && \
+    ./configure --enable-shared \
+                --disable-static \
+                --enable-pic \
+                --enable-libopus \
+                --enable-libvpx \
+                --enable-libx264 \
+                --disable-doc \
+                --disable-htmlpages \
+                --disable-manpages \
+                --disable-podpages \
+                --disable-txtpages \
+                --prefix=/usr/local && \
+    make -j"$(nproc)" && \
+    make install && \
+    ldconfig && \
+    cd .. && rm -rf FFmpeg
 
 # 编译安装 libuuid
 RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz && \
