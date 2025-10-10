@@ -143,6 +143,12 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     fi && \
     # 确保启用 databases/mod_mariadb 模块
     sed -i 's/^#\(databases\/mod_mariadb\)/\1/' build/modules.conf.in && \
+    # 启用 event_handlers/mod_odbc_cdr 模块（ODBC CDR 记录）
+    sed -i 's/^#\(event_handlers\/mod_odbc_cdr\)/\1/' build/modules.conf.in && \
+    # 启用 xml_int/mod_xml_curl 模块（用于动态 XML 配置）
+    sed -i 's/^#\(xml_int\/mod_xml_curl\)/\1/' build/modules.conf.in && \
+    # 启用中文报号模块 say/mod_say_zh（默认在 build/modules.conf.in 中被注释）
+    sed -i 's/^#\(say\/mod_say_zh\)/\1/' build/modules.conf.in && \
     ./bootstrap.sh && \
     # 配置编译选项（根据视频支持参数）
     if [ "${ENABLE_VIDEO}" = "1" ]; then \

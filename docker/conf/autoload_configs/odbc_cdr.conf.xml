@@ -1,0 +1,52 @@
+<configuration name="odbc_cdr.conf" description="ODBC CDR Configuration">
+  <settings>
+    <!-- 
+      ODBC CDR 模块配置
+      用于将呼叫详单记录(CDR)通过 ODBC 写入数据库
+      
+      数据库连接使用 ODBC DSN，需要在启动时通过环境变量配置：
+      - FREESWITCH_DB_HOST
+      - FREESWITCH_DB_NAME
+      - FREESWITCH_DB_USER
+      - FREESWITCH_DB_PASSWORD
+      - FREESWITCH_DB_PORT
+      
+      docker-entrypoint.sh 会自动配置 odbc.conf.xml 中的 DSN
+    -->
+    
+    <!-- 数据库 DSN 名称，将使用 odbc.conf.xml 中配置的 DSN -->
+    <!-- 环境变量配置后，DSN 格式为：mysql:host=xxx;port=xxx;database=xxx;uid=xxx;pwd=xxx;charset=utf8mb4 -->
+    <param name="odbc-dsn" value="$${odbc_dsn:freeswitch}"/>
+    
+    <!-- CDR 日志 - 记录到 FreeSWITCH 日志文件 -->
+    <param name="log-b-leg" value="true"/>
+    
+    <!-- 数据库表名 -->
+    <param name="table" value="cdr"/>
+    
+    <!-- CDR 字段映射 - 将 FreeSWITCH 通道变量映射到数据库字段 -->
+    <schema>
+      <!-- 基本通话信息 -->
+      <field var="uuid" column="uuid"/>
+      <field var="caller_id_name" column="caller_id_name"/>
+      <field var="caller_id_number" column="caller_id_number"/>
+      <field var="destination_number" column="destination_number"/>
+      <field var="context" column="context"/>
+      <field var="start_stamp" column="start_stamp"/>
+      <field var="answer_stamp" column="answer_stamp"/>
+      <field var="end_stamp" column="end_stamp"/>
+      <field var="duration" column="duration"/>
+      <field var="billsec" column="billsec"/>
+      <field var="hangup_cause" column="hangup_cause"/>
+      
+      <!-- 账户信息 -->
+      <field var="accountcode" column="accountcode"/>
+      
+      <!-- SIP 信息 -->
+      <field var="sip_hangup_disposition" column="sip_hangup_disposition"/>
+      
+      <!-- 自定义字段示例 -->
+      <!-- <field var="custom_field" column="custom_field"/> -->
+    </schema>
+  </settings>
+</configuration>
