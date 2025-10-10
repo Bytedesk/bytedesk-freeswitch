@@ -251,10 +251,10 @@ RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \
 COPY conf/ ${FREESWITCH_PREFIX}/conf/
 
 # 配置 ODBC（复制 ODBC 配置文件到系统目录）
-RUN mkdir -p /etc/odbc && \
-    cp ${FREESWITCH_PREFIX}/conf/odbc.ini /etc/odbc.ini && \
-    cp ${FREESWITCH_PREFIX}/conf/odbcinst.ini /etc/odbcinst.ini && \
-    chmod 644 /etc/odbc.ini /etc/odbcinst.ini
+# 从 docker/etc/ 文件夹复制 ODBC 配置文件
+COPY etc/odbc.ini /etc/odbc.ini
+COPY etc/odbcinst.ini /etc/odbcinst.ini
+RUN chmod 644 /etc/odbc.ini /etc/odbcinst.ini
 
 # 创建数据目录
 RUN mkdir -p ${FREESWITCH_PREFIX}/log \
