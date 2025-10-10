@@ -85,7 +85,7 @@
     <load module="mod_cidlookup" />
     <!-- 计费模块 - 实时计费扣费 -->
     <load module="mod_nibblebill" />
-    <!--<load module="mod_easyroute"/>-->
+    <load module="mod_easyroute"/> <!-- 简化路由查询模块（数据库路由） -->
     <load module="mod_esf" />
     <load module="mod_fsv" />
     <!--<load module="mod_cluechoo"/>-->
@@ -155,7 +155,8 @@
     <!-- <load module="mod_python"/> -->
     <!-- Python3 语言支持 - 用于编写 Python 脚本 -->
     <load module="mod_python3" />
-    <!-- <load module="mod_java"/> -->
+    <!-- Java 语言支持 - 用于编写 Java 应用 -->
+    <load module="mod_java" />
     <load module="mod_lua" />
 
     <!-- ASR /TTS -->

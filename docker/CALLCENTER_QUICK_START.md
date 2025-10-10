@@ -7,6 +7,7 @@
 - ✅ mod_callcenter - 呼叫中心核心功能
 - ✅ mod_blacklist - 黑名单管理
 - ✅ mod_python3 - Python 3 脚本支持
+- ✅ mod_java - Java 语言支持
 - ✅ mod_curl - HTTP API 集成
 - ✅ mod_hiredis - Redis 连接
 - ✅ mod_redis - Redis 限流功能
@@ -22,6 +23,8 @@
 - ✅ mod_conference - 会议功能
 - ✅ mod_voicemail - 语音邮箱
 - ✅ mod_lua - Lua 脚本支持
+- ✅ mod_python3 - Python 3 脚本支持
+- ✅ mod_java - Java 语言支持
 - ✅ mod_odbc_cdr - ODBC CDR 记录
 - ✅ mod_xml_curl - 动态 XML 配置
 - ✅ mod_mariadb - MariaDB 数据库支持
