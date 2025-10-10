@@ -31,9 +31,10 @@
     <!-- <load module="mod_erlang_event"/> -->
     <!-- <load module="mod_smpp"/> -->
     <!-- <load module="mod_snmp"/> -->
-    <!-- <load module="mod_odbc"/> -->
     <!-- ODBC CDR - 通过 ODBC 将 CDR 记录写入数据库 -->
     <load module="mod_odbc_cdr" />
+    <!-- Fail2ban - 安全防护，防止暴力破解 -->
+    <load module="mod_fail2ban" />
 
     <!-- Directory Interfaces -->
     <!-- <load module="mod_ldap"/> -->
@@ -58,44 +59,45 @@
     <!-- <load module="mod_signalwire"/> -->
     <load module="mod_commands" />
     <load module="mod_conference" />
-    <!-- <load module="mod_curl"/> -->
+    <!-- 呼叫中心核心模块 -->
+    <load module="mod_callcenter" />
+    <!-- 黑名单功能 -->
+    <load module="mod_blacklist" />
+    <!-- cURL HTTP 请求功能 -->
+    <load module="mod_curl" />
     <load module="mod_db" />
     <!-- <load module="mod_mariadb"/> -->
     <load module="mod_dptools" />
     <load module="mod_expr" />
     <load module="mod_fifo" />
     <load module="mod_hash" />
-    <!--<load
-    module="mod_mongo"/> -->
+    <!-- Redis 客户端支持 -->
+    <load module="mod_hiredis" />
+    <load module="mod_redis" />
+    <!--<load module="mod_mongo"/> -->
     <load module="mod_voicemail" />
-    <!--<load
-    module="mod_directory"/>-->
-    <!--<load
-    module="mod_distributor"/>-->
-    <!--<load
-    module="mod_lcr"/>-->
-    <!--<load
-    module="mod_easyroute"/>-->
+    <!--<load module="mod_directory"/>-->
+    <!-- 呼叫分配器 - 用于负载均衡和路由 -->
+    <load module="mod_distributor" />
+    <!-- 最低成本路由 - 用于智能路由选择 -->
+    <load module="mod_lcr" />
+    <!-- 来电显示查询 - 号码归属地查询 -->
+    <load module="mod_cidlookup" />
+    <!-- 计费模块 - 实时计费扣费 -->
+    <load module="mod_nibblebill" />
+    <!--<load module="mod_easyroute"/>-->
     <load module="mod_esf" />
     <load module="mod_fsv" />
-    <!--<load
-    module="mod_cluechoo"/>-->
+    <!--<load module="mod_cluechoo"/>-->
     <load module="mod_valet_parking" />
-    <!--<load
-    module="mod_fsk"/>-->
-    <!--<load
-    module="mod_spy"/>-->
-    <!--<load
-    module="mod_sms"/>-->
-    <!--<load
-    module="mod_sms_flowroute"/>-->
-    <!--<load
-    module="mod_smpp"/>-->
-    <!--<load
-    module="mod_random"/>-->
+    <!--<load module="mod_fsk"/>-->
+    <!--<load module="mod_spy"/>-->
+    <!--<load module="mod_sms"/>-->
+    <!--<load module="mod_sms_flowroute"/>-->
+    <!--<load module="mod_smpp"/>-->
+    <!--<load module="mod_random"/>-->
     <load module="mod_httapi" />
-    <!--<load
-    module="mod_translate"/>-->
+    <!--<load module="mod_translate"/>-->
 
     <!-- SNOM Module -->
     <!--<load
@@ -151,7 +153,8 @@
     <!-- <load module="mod_v8"/> -->
     <!-- <load module="mod_perl"/> -->
     <!-- <load module="mod_python"/> -->
-    <!-- <load module="mod_python3"/> -->
+    <!-- Python3 语言支持 - 用于编写 Python 脚本 -->
+    <load module="mod_python3" />
     <!-- <load module="mod_java"/> -->
     <load module="mod_lua" />
 

@@ -40,7 +40,8 @@ WORKDIR /root
 # 安装系统依赖
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y \
-    unixodbc-dev odbc-mariadb git build-essential automake autoconf libtool libtool-bin python3 \
+    unixodbc-dev odbc-mariadb git build-essential automake autoconf libtool libtool-bin \
+    python3 python3-dev python3-distutils \
     zlib1g-dev libjpeg-dev libncurses5-dev libssl-dev libpcre3-dev libspeexdsp-dev \
     libspeex-dev libcurl4-openssl-dev libopus-dev libsqlite3-dev libldns-dev libedit-dev \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
@@ -48,6 +49,8 @@ RUN apt-get update && apt-get upgrade -y && \
     liblua5.3-dev lua5.3 \
     libmariadb-dev libmariadb-dev-compat \
     libssl-dev libcrypto++-dev libgnutls28-dev \
+    # Redis 客户端库（用于 mod_hiredis 和 mod_redis）
+    libhiredis-dev redis-tools \
     # 视频编解码依赖库
     libvpx-dev libx264-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -145,10 +148,23 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     sed -i 's/^#\(databases\/mod_mariadb\)/\1/' build/modules.conf.in && \
     # 启用 event_handlers/mod_odbc_cdr 模块（ODBC CDR 记录）
     sed -i 's/^#\(event_handlers\/mod_odbc_cdr\)/\1/' build/modules.conf.in && \
+    # 启用 event_handlers/mod_fail2ban 模块（安全防护）
+    sed -i 's/^#\(event_handlers\/mod_fail2ban\)/\1/' build/modules.conf.in && \
     # 启用 xml_int/mod_xml_curl 模块（用于动态 XML 配置）
     sed -i 's/^#\(xml_int\/mod_xml_curl\)/\1/' build/modules.conf.in && \
     # 启用中文报号模块 say/mod_say_zh（默认在 build/modules.conf.in 中被注释）
     sed -i 's/^#\(say\/mod_say_zh\)/\1/' build/modules.conf.in && \
+    # 启用呼叫中心相关模块
+    sed -i 's/^#\(applications\/mod_callcenter\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_blacklist\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_curl\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_hiredis\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_redis\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_distributor\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_lcr\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_cidlookup\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(applications\/mod_nibblebill\)/\1/' build/modules.conf.in && \
+    sed -i 's/^#\(languages\/mod_python3\)/\1/' build/modules.conf.in && \
     ./bootstrap.sh && \
     # 配置编译选项（根据视频支持参数）
     if [ "${ENABLE_VIDEO}" = "1" ]; then \
