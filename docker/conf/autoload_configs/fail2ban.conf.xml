@@ -1,0 +1,37 @@
+<configuration name="fail2ban.conf" description="Fail2Ban Configuration">
+  <settings>
+    <!-- 启用 fail2ban 功能 -->
+    <param name="enabled" value="true"/>
+    
+    <!-- 最大失败尝试次数 -->
+    <param name="max-failures" value="5"/>
+    
+    <!-- 封禁时间（秒），默认 300 秒 = 5 分钟 -->
+    <param name="ban-time" value="300"/>
+    
+    <!-- 时间窗口（秒），在此时间内统计失败次数 -->
+    <param name="find-time" value="300"/>
+    
+    <!-- 日志级别 -->
+    <param name="log-level" value="info"/>
+  </settings>
+
+  <!-- 监控的事件类型 -->
+  <events>
+    <!-- 监控 SIP 认证失败事件 -->
+    <event name="CUSTOM" subclass="sofia::register_failure"/>
+    <event name="CUSTOM" subclass="sofia::register_attempt"/>
+    
+    <!-- 监控其他认证失败事件 -->
+    <event name="REQUEST_PARAMS" subclass=""/>
+  </events>
+
+  <!-- 白名单 IP 地址（不会被封禁的 IP） -->
+  <whitelist>
+    <ip>127.0.0.1</ip>
+    <ip>localhost</ip>
+    <!-- 添加其他受信任的 IP 地址 -->
+    <!-- <ip>192.168.1.0/24</ip> -->
+  </whitelist>
+
+</configuration>

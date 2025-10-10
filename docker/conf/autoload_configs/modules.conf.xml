@@ -34,9 +34,9 @@
     <!-- ODBC CDR - 通过 ODBC 将 CDR 记录写入数据库 -->
     <load module="mod_odbc_cdr" />
     <!-- JSON CDR - 现代化的 JSON 格式 CDR 记录⭐⭐⭐⭐ -->
-    <load module="mod_json_cdr" />
+    <!-- <load module="mod_json_cdr" /> -->
     <!-- Fail2ban - 安全防护，防止暴力破解 -->
-    <load module="mod_fail2ban" />
+    <!-- <load module="mod_fail2ban" /> -->
 
     <!-- Directory Interfaces -->
     <!-- <load module="mod_ldap"/> -->
@@ -62,11 +62,11 @@
     <load module="mod_commands" />
     <load module="mod_conference" />
     <!-- 呼叫中心核心模块 -->
-    <load module="mod_callcenter" />
+    <!-- <load module="mod_callcenter" /> -->
     <!-- 黑名单功能 -->
-    <load module="mod_blacklist" />
+    <!-- <load module="mod_blacklist" /> -->
     <!-- cURL HTTP 请求功能 -->
-    <load module="mod_curl" />
+    <!-- <load module="mod_curl" /> -->
     <load module="mod_db" />
     <!-- <load module="mod_mariadb"/> -->
     <load module="mod_dptools" />
@@ -74,30 +74,34 @@
     <load module="mod_fifo" />
     <load module="mod_hash" />
     <!-- Redis 客户端支持 -->
-    <load module="mod_hiredis" />
-    <load module="mod_redis" />
+    <!-- <load module="mod_hiredis" /> -->
+    <!-- <load module="mod_redis" /> -->
     <!--<load module="mod_mongo"/> -->
     <load module="mod_voicemail" />
-    <!--<load module="mod_directory"/>-->
     <!-- 呼叫分配器 - 用于负载均衡和路由 -->
-    <load module="mod_distributor" />
+    <!-- <load module="mod_distributor" /> -->
     <!-- 最低成本路由 - 用于智能路由选择 -->
-    <load module="mod_lcr" />
+    <!-- <load module="mod_lcr" /> -->
     <!-- 来电显示查询 - 号码归属地查询 -->
-    <load module="mod_cidlookup" />
+    <!-- <load module="mod_cidlookup" /> -->
     <!-- 计费模块 - 实时计费扣费 -->
-    <load module="mod_nibblebill" />
-    <load module="mod_easyroute"/> <!-- 简化路由查询模块（数据库路由） -->
+    <!-- <load module="mod_nibblebill" /> -->
+    <!-- 简化路由查询模块（数据库路由） -->
+    <!-- <load module="mod_easyroute"/>  -->
     <load module="mod_esf" />
     <load module="mod_fsv" />
     <!--<load module="mod_cluechoo"/>-->
     <load module="mod_valet_parking" />
     <!--<load module="mod_fsk"/>-->
-    <load module="mod_spy"/> <!-- 监听/窃听/耳语模块（呼叫中心质检必备） -->
+    <!-- 监听/窃听/耳语模块（呼叫中心质检必备） -->
+    <!-- <load module="mod_spy" />  -->
     <!-- 强烈推荐的呼叫中心模块 -->
-    <load module="mod_avmd"/> <!-- 答录机检测（外呼必备）⭐⭐⭐⭐⭐ -->
-    <load module="mod_directory"/> <!-- 企业通讯录（座席效率）⭐⭐⭐⭐ -->
-    <load module="mod_voicemail_ivr"/> <!-- 增强型语音邮箱（完整功能）⭐⭐⭐⭐ -->
+     <!-- 答录机检测（外呼必备）⭐⭐⭐⭐⭐ -->
+    <!-- <load module="mod_avmd" />  -->
+    <!-- 企业通讯录（座席效率）⭐⭐⭐⭐ -->
+    <!-- <load module="mod_directory" />  -->
+    <!-- 增强型语音邮箱（完整功能）⭐⭐⭐⭐ -->
+    <!-- <load module="mod_voicemail_ivr" />  -->
     <!--<load module="mod_sms"/>-->
     <!--<load module="mod_sms_flowroute"/>-->
     <!--<load module="mod_smpp"/>-->
@@ -106,12 +110,10 @@
     <!--<load module="mod_translate"/>-->
 
     <!-- SNOM Module -->
-    <!--<load
-    module="mod_snom"/>-->
+    <!--<load module="mod_snom"/>-->
 
     <!-- This one only works on Linux for now -->
-    <!--<load
-    module="mod_ladspa"/>-->
+    <!--<load module="mod_ladspa"/>-->
 
     <!-- Dialplan Interfaces -->
     <!-- <load module="mod_dialplan_directory"/> -->
@@ -123,29 +125,22 @@
     <load module="mod_g723_1" />
     <load module="mod_g729" />
     <load module="mod_amr" />
-    <!--<load
-    module="mod_ilbc"/>-->
-    <!--<load
-    module="mod_h26x"/>-->
+    <!--<load module="mod_ilbc"/>-->
+    <!--<load module="mod_h26x"/>-->
     <load module="mod_b64" />
-    <!--<load
-    module="mod_siren"/>-->
-    <!--<load
-    module="mod_isac"/>-->
+    <!--<load module="mod_siren"/>-->
+    <!--<load module="mod_isac"/>-->
     <load module="mod_opus" />
 
     <!-- File Format Interfaces -->
     <load module="mod_av" />
     <load module="mod_sndfile" />
     <load module="mod_native_file" />
-    <!--<load
-    module="mod_opusfile"/>-->
+    <!--<load module="mod_opusfile"/>-->
     <load module="mod_png" />
     <!-- <load module="mod_shell_stream"/> -->
-    <!--For
-    icecast/mp3 streams/files-->
-    <!--<load
-    module="mod_shout"/>-->
+    <!--For icecast/mp3 streams/files-->
+    <!--<load module="mod_shout"/>-->
     <!--For
     local streams (play all the files in a directory)-->
     <load module="mod_local_stream" />
@@ -160,7 +155,7 @@
     <!-- <load module="mod_perl"/> -->
     <!-- <load module="mod_python"/> -->
     <!-- Python3 语言支持 - 用于编写 Python 脚本 -->
-    <load module="mod_python3" />
+    <!-- <load module="mod_python3" /> -->
     <!-- Java 语言支持 - 用于编写 Java 应用 -->
     <load module="mod_java" />
     <load module="mod_lua" />
@@ -177,12 +172,6 @@
     <!-- <load module="mod_say_ru"/> -->
     <load module="mod_say_zh" />
     <!-- <load module="mod_say_sv"/> -->
-
-    <!-- Third party modules -->
-    <!--<load
-    module="mod_nibblebill"/>-->
-    <!--<load
-    module="mod_callcenter"/>-->
 
   </modules>
 </configuration>
