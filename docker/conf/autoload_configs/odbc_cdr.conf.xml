@@ -1,39 +1,50 @@
 <configuration name="odbc_cdr.conf" description="ODBC CDR Configuration">
   <settings>
-    <!-- 数据库 DSN 名称 -->
-    <!-- 连接信息在 vars.xml 中统一配置，通过 $${legacy_odbc_dsn} 变量引用 -->
-    <!-- 格式: dsn:username:password -->
-    <!-- <param name="odbc-dsn" value="$${legacy_odbc_dsn}"/> -->
-    
-    <!-- CDR 日志 - 记录到 FreeSWITCH 日志文件 -->
-    <param name="log-b-leg" value="true"/>
-    
-    <!-- 数据库表名 -->
-    <param name="table" value="cdr"/>
-    
-    <!-- CDR 字段映射 - 将 FreeSWITCH 通道变量映射到数据库字段 -->
-    <schema>
-      <!-- 基本通话信息 -->
-      <field var="uuid" column="uuid"/>
-      <field var="caller_id_name" column="caller_id_name"/>
-      <field var="caller_id_number" column="caller_id_number"/>
-      <field var="destination_number" column="destination_number"/>
-      <field var="context" column="context"/>
-      <field var="start_stamp" column="start_stamp"/>
-      <field var="answer_stamp" column="answer_stamp"/>
-      <field var="end_stamp" column="end_stamp"/>
-      <field var="duration" column="duration"/>
-      <field var="billsec" column="billsec"/>
-      <field var="hangup_cause" column="hangup_cause"/>
-      
-      <!-- 账户信息 -->
-      <field var="accountcode" column="accountcode"/>
-      
-      <!-- SIP 信息 -->
-      <field var="sip_hangup_disposition" column="sip_hangup_disposition"/>
-      
-      <!-- 自定义字段示例 -->
-      <!-- <field var="custom_field" column="custom_field"/> -->
-    </schema>
+    <!-- 使用 /etc/odbc.ini 中配置的 DSN 名称 -->
+  <!-- 使用 /etc/odbc.ini 中配置的 DSN 名称（MySQL） -->
+  <!-- 重要：mod_odbc_cdr 需要使用参数名 odbc-dsn，否则会回退为 core_db(SQLite) 标签 -->
+    <!-- 推荐：显式传入凭据，避免 DSN 使用占位符 USER/PASSWORD 导致认证失败 -->
+    <param name="odbc-dsn" value="freeswitch:$${db_username}:$${db_password}" />
+    <!-- 打开 SQL 调试，便于在日志中看到具体的 INSERT 语句与 DSN 路径 -->
+    <param name="debug-sql" value="true" />
+    <!-- 可选：在 A-Leg/B-Leg 写不同表，默认统一写入 cdr 表 -->
+    <param name="table" value="cdr" />
+
   </settings>
+  <tables>
+    <table name="cdr" log-leg="both">
+      <!-- 仅保留 MySQL 现有表 cdr 中的列，避免未知列错误 -->
+      <!-- 主键与会话标识 -->
+      <field name="uuid" chan-var-name="uuid" />
+      <field name="bleg_uuid" chan-var-name="bridge_uuid" />
+
+      <!-- 账户/域信息（注意 account_code 列名有下划线） -->
+      <field name="account_code" chan-var-name="accountcode" />
+      <field name="domain_name" chan-var-name="domain_name" />
+
+      <!-- 主被叫与目的号码 -->
+      <field name="caller_id_name" chan-var-name="caller_id_name" />
+      <field name="caller_id_number" chan-var-name="caller_id_number" />
+      <field name="destination_number" chan-var-name="destination_number" />
+      <field name="context" chan-var-name="context" />
+
+      <!-- 时间/时长（表字段为 timestamp/int） -->
+      <field name="start_stamp" chan-var-name="start_stamp" />
+      <field name="answer_stamp" chan-var-name="answer_stamp" />
+      <field name="end_stamp" chan-var-name="end_stamp" />
+      <field name="duration" chan-var-name="duration" quote="false" default-value="0" />
+      <field name="billsec" chan-var-name="billsec" quote="false" default-value="0" />
+
+      <!-- 结束原因/编码信息 -->
+      <field name="hangup_cause" chan-var-name="hangup_cause" />
+      <field name="read_codec" chan-var-name="read_codec" />
+      <field name="write_codec" chan-var-name="write_codec" />
+      <field name="sip_hangup_disposition" chan-var-name="sip_hangup_disposition" />
+
+      <!-- 号码展示/网络地址（若有） -->
+      <field name="ani" chan-var-name="ani" />
+      <field name="aniii" chan-var-name="aniii" />
+      <field name="network_addr" chan-var-name="network_addr" />
+    </table>
+  </tables>
 </configuration>

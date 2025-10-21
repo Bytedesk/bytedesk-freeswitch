@@ -1,97 +1,10 @@
 <!-- FreeSwitch Directory配置 - 支持从MySQL数据库加载用户 -->
 <configuration name="directory.conf" description="Directory Configuration">
   <settings>
-    <!-- 数据库 DSN 名称 -->
-    <!-- 连接信息在 vars.xml 中统一配置，通过 $${legacy_odbc_dsn} 变量引用 -->
-    <!-- 格式: dsn:username:password -->
-    <!-- <param name="odbc-dsn" value="$${legacy_odbc_dsn}"/> -->
-    
     <!-- 缓存设置 -->
     <param name="cache-expire" value="300"/>
     
     <!-- 调试模式 -->
     <param name="debug" value="1"/>
   </settings>
-  
-  <!-- 域配置 -->
-  <domain name="$${bytedesk_domain}">
-    <params>
-      <param name="dial-string" value="{^^:sip_invite_domain=${dialed_domain}:presence_id=${dialed_user}@${dialed_domain}}${sofia_contact(*/${dialed_user}@${dialed_domain})},${verto_contact(${dialed_user}@${dialed_domain})}"/>
-      <param name="jsonrpc-allowed-methods" value="verto"/>
-      <param name="jsonrpc-allowed-event-channels" value="demo,conference,presence"/>
-    </params>
-    
-    <variables>
-      <variable name="record_stereo" value="true"/>
-      <variable name="default_gateway" value="$${default_provider}"/>
-      <variable name="default_areacode" value="$${default_areacode}"/>
-      <variable name="transfer_fallback_extension" value="operator"/>
-    </variables>
-    
-    <groups>
-      <group name="bytedesk_users">
-        <!-- 从数据库动态加载用户 -->
-        <users>
-          <!-- 
-          这里可以配置SQL查询来从MySQL数据库中动态加载用户
-          示例用户配置 - 这些将被数据库中的实际用户替换
-          -->
-          
-          <!-- 管理员用户 -->
-          <user id="admin">
-            <params>
-              <param name="password" value="$${bytedesk_password}"/>
-              <param name="vm-password" value="admin"/>
-            </params>
-            <variables>
-              <variable name="toll_allow" value="domestic,international,local"/>
-              <variable name="accountcode" value="admin"/>
-              <variable name="user_context" value="default"/>
-              <variable name="effective_caller_id_name" value="Admin"/>
-              <variable name="effective_caller_id_number" value="admin"/>
-              <variable name="outbound_caller_id_name" value="$${outbound_caller_name}"/>
-              <variable name="outbound_caller_id_number" value="$${outbound_caller_id}"/>
-              <variable name="callgroup" value="bytedesk"/>
-            </variables>
-          </user>
-          
-          <!-- 示例客服用户 1000 -->
-          <user id="1000">
-            <params>
-              <param name="password" value="$${bytedesk_password}"/>
-              <param name="vm-password" value="1000"/>
-            </params>
-            <variables>
-              <variable name="toll_allow" value="domestic,international,local"/>
-              <variable name="accountcode" value="1000"/>
-              <variable name="user_context" value="default"/>
-              <variable name="effective_caller_id_name" value="Agent 1000"/>
-              <variable name="effective_caller_id_number" value="1000"/>
-              <variable name="outbound_caller_id_name" value="$${outbound_caller_name}"/>
-              <variable name="outbound_caller_id_number" value="$${outbound_caller_id}"/>
-              <variable name="callgroup" value="bytedesk"/>
-            </variables>
-          </user>
-          
-          <!-- 示例客服用户 1001 -->
-          <user id="1001">
-            <params>
-              <param name="password" value="$${bytedesk_password}"/>
-              <param name="vm-password" value="1001"/>
-            </params>
-            <variables>
-              <variable name="toll_allow" value="domestic,international,local"/>
-              <variable name="accountcode" value="1001"/>
-              <variable name="user_context" value="default"/>
-              <variable name="effective_caller_id_name" value="Agent 1001"/>
-              <variable name="effective_caller_id_number" value="1001"/>
-              <variable name="outbound_caller_id_name" value="$${outbound_caller_name}"/>
-              <variable name="outbound_caller_id_number" value="$${outbound_caller_id}"/>
-              <variable name="callgroup" value="bytedesk"/>
-            </variables>
-          </user>
-        </users>
-      </group>
-    </groups>
-  </domain>
 </configuration>

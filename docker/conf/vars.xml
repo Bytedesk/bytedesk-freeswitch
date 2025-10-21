@@ -494,13 +494,18 @@
     <!-- 所有 MySQL 连接信息都在这里配置，其他配置文件通过变量引用 -->
     <!-- =============================================== -->
 
+    <!-- ByteDesk Domain and Network Configuration -->
+  <X-PRE-PROCESS cmd="set" data="bytedesk_password=bytedesk123" />
+  <!-- ESL Configuration for ByteDesk -->
+  <X-PRE-PROCESS cmd="set" data="esl_password=bytedesk123" />
+
     <!-- 基础数据库连接参数 -->
     <X-PRE-PROCESS cmd="set" data="db_username=root" />
     <X-PRE-PROCESS cmd="set" data="db_password=r8FqfdbWUaN3" />
     <!-- 使用 Docker 服务名 bytedesk-mysql，FreeSWITCH 会通过 Docker DNS 解析 -->
     <X-PRE-PROCESS cmd="set" data="db_host=bytedesk-mysql" />
     <X-PRE-PROCESS cmd="set" data="db_port=3306" />
-    <X-PRE-PROCESS cmd="set" data="db_name=bytedesk" />
+    <X-PRE-PROCESS cmd="set" data="db_name=bytedesk_freeswitch" />
 
     <!-- MySQL 直连 DSN 字符串 (不需要 ODBC 配置文件) -->
     <!-- 使用 ODBC 风格的连接字符串格式 -->

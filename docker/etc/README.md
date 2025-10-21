@@ -49,7 +49,7 @@ docker/
 
 - `FREESWITCH_DB_HOST` - 数据库主机地址（默认: bytedesk-mysql）
 - `FREESWITCH_DB_PORT` - 数据库端口（默认: 3306）
-- `FREESWITCH_DB_NAME` - 数据库名称（默认: bytedesk）
+- `FREESWITCH_DB_NAME` - 数据库名称（默认: bytedesk_freeswitch）
 - `FREESWITCH_DB_USER` - 数据库用户名（默认: root）
 - `FREESWITCH_DB_PASSWORD` - 数据库密码
 
