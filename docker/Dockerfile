@@ -46,6 +46,8 @@ RUN apt-get update && apt-get upgrade -y && \
     libspeex-dev libcurl4-openssl-dev libopus-dev libsqlite3-dev libldns-dev libedit-dev \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
     libsndfile1-dev \
+    # UniMRCP 依赖（APR/APR-Util/Expat）
+    libapr1-dev libaprutil1-dev libexpat1-dev \
     liblua5.3-dev lua5.3 \
     libmariadb-dev libmariadb-dev-compat \
     libssl-dev libcrypto++-dev libgnutls28-dev \
@@ -242,6 +244,26 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
 
 # 确保所有共享库都被正确链接
 RUN ldconfig
+
+# 编译安装 UniMRCP 与 mod_unimrcp（启用 MRCP 客户端支持）
+RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
+    # 构建 UniMRCP（安装到 /usr/local，便于共享库与 pkg-config 路径统一） \
+    git clone https://github.com/unispeech/unimrcp.git && \
+    cd unimrcp && \
+    ./bootstrap && \
+    ./configure --prefix=/usr/local && \
+    make -j"$(nproc)" && make install && \
+    ldconfig && \
+    cd .. && rm -rf unimrcp && \
+    # 构建 mod_unimrcp（安装到 FreeSWITCH 模块目录） \
+    git clone https://github.com/freeswitch/mod_unimrcp.git && \
+    cd mod_unimrcp && \
+    export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
+    ./bootstrap.sh && \
+    ./configure && \
+    make -j"$(nproc)" && make install && \
+    ldconfig && \
+    cd .. && rm -rf mod_unimrcp
 
 # 创建符号链接
 RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \

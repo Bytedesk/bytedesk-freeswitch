@@ -1,0 +1,10 @@
+<configuration name="unimrcp.conf" description="UniMRCP Client">
+  <settings>
+    <!-- 默认使用的 MRCP Profile 名称，可根据需要修改为其他 profile 名称 -->
+    <param name="default-profile" value="baidu"/>
+    <!-- MRCP Profile 根目录 -->
+    <param name="profile-root-dir" value="$${conf_dir}/mrcp_profiles"/>
+    <!-- 是否输出 Profile 级事件（通常不需要） -->
+    <param name="enable-profile-events" value="false"/>
+  </settings>
+</configuration>

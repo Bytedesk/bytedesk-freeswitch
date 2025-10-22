@@ -105,3 +105,43 @@ docker compose down
 
 **维护者**: ByteDesk Team  
 **最后更新**: 2025-10-09
+
+## 🎙️ MRCP 支持（mod_unimrcp）
+
+本镜像已内置并默认启用 `mod_unimrcp`，可作为 MRCP 客户端对接外部 MRCP Server（如百度/腾讯/讯飞等）。
+
+### 配置步骤
+
+1) 修改 MRCP Profile：`conf/mrcp_profiles/baidu.xml`
+
+- 将 `server-ip` 改为实际 MRCP Server 的 IP，`server-port` 通常为 5060（SIP）。
+
+2) 默认加载模块与配置
+
+- 自动加载：`autoload_configs/modules.conf.xml` 已包含 `<load module="mod_unimrcp"/>`
+- 客户端设置：`autoload_configs/unimrcp.conf.xml` 默认 `default-profile=baidu`
+
+3) 运行时验证
+
+```bash
+docker exec -it freeswitch fs_cli -x "show modules | grep unimrcp"
+```
+
+若输出包含 `mod_unimrcp`，说明模块加载成功。
+
+### 在 Dialplan 中使用示例
+
+```xml
+<extension name="baidu_asr_test">
+  <condition field="destination_number" expression="^9001$">
+    <action application="answer"/>
+    <action application="sleep" data="1000"/>
+    <action application="speak" data="请说话"/>
+    <action application="play_and_detect_speech"
+            data="silence_stream://2000 mrcp:baidu {start-input-timers=false}builtin:grammar/boolean grammar.xml"/>
+    <action application="log" data="INFO 识别结果: ${detect_speech_result}"/>
+  </condition>
+  </extension>
+```
+
+> 更详细的 MRCP 服务端搭建与说明，请参考仓库文档 `freeswitch_mrcp.md`（或你的内部文档）。

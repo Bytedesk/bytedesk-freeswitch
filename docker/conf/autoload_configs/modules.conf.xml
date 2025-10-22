@@ -159,6 +159,7 @@
     <load module="mod_lua" />
 
     <!-- ASR /TTS -->
+  <load module="mod_unimrcp" />
     <!-- <load module="mod_flite"/> -->
     <!-- <load module="mod_pocketsphinx"/> -->
     <!-- <load module="mod_cepstral"/> -->

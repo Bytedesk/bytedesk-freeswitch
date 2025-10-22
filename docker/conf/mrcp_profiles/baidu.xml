@@ -1,0 +1,16 @@
+<profile name="baidu" version="2">
+  <!-- 修改为实际的百度 MRCP Server 地址 -->
+  <param name="server-ip" value="your_server_ip"/>
+  <param name="server-port" value="5060"/>
+  <param name="resource-location" value=""/>
+  <param name="sip-transport" value="udp"/>
+
+  <!-- 语音合成（TTS）参数，可按需补充 -->
+  <synthparams>
+  </synthparams>
+
+  <!-- 语音识别（ASR）参数 -->
+  <recogparams>
+    <param name="start-input-timers" value="false"/>
+  </recogparams>
+</profile>
