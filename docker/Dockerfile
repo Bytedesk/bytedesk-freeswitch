@@ -272,6 +272,10 @@ RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \
 # 复制配置文件
 COPY conf/ ${FREESWITCH_PREFIX}/conf/
 
+# 使用本地 sounds 覆盖 FreeSWITCH 默认 sounds（若存在，将在 build.sh 中准备）
+RUN rm -rf ${FREESWITCH_PREFIX}/sounds && mkdir -p ${FREESWITCH_PREFIX}/sounds
+COPY sounds/ ${FREESWITCH_PREFIX}/sounds/
+
 # 配置 ODBC（复制 ODBC 配置文件到系统目录）
 # 从 docker/etc/ 文件夹复制 ODBC 配置文件
 COPY etc/odbc.ini /etc/odbc.ini

@@ -59,6 +59,21 @@ fi
 # 构建镜像（同时标记 Docker Hub 和阿里云镜像）
 log_step "Starting Docker build with multi-registry tags..."
 
+# 准备 sounds 目录：优先使用仓库根目录下的 sounds 内容
+if [ -d "../sounds" ]; then
+    log_step "Syncing ../sounds -> ./sounds"
+    rm -rf sounds
+    mkdir -p sounds
+    # 使用 cp -a 保留属性；若不可用可退化为常规复制
+    cp -a ../sounds/. ./sounds/ 2>/dev/null || {
+        log_warn "cp -a not supported, falling back to cp -R"
+        cp -R ../sounds/. ./sounds/
+    }
+else
+    log_warn "No ../sounds directory found. Building without local sounds override."
+    mkdir -p sounds
+fi
+
 docker build \
     --build-arg BUILD_DATE="${BUILD_DATE}" \
     --build-arg VCS_REF="${VCS_REF}" \

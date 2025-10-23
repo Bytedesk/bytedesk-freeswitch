@@ -1,3 +1,4 @@
+> [MOVED] 本文档已迁移至 `docker/docs/MODULES_UPDATE_SUMMARY.md`，此处副本已弃用，请访问新位置。
 # 呼叫中心模块更新总结
 
 ## 更新日期

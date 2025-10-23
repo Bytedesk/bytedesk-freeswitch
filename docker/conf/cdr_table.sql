@@ -23,9 +23,7 @@ SET NAMES utf8mb4;
 # 转储表 cdr
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `cdr`;
-
-CREATE TABLE `cdr` (
+CREATE TABLE IF NOT EXISTS `cdr` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(64) NOT NULL,
   `bleg_uuid` varchar(64) DEFAULT NULL,

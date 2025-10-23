@@ -106,7 +106,26 @@ docker compose down
 **维护者**: ByteDesk Team  
 **最后更新**: 2025-10-09
 
-## 🎙️ MRCP 支持（mod_unimrcp）
+## � 声音资源（sounds）覆盖策略
+
+镜像构建时将优先使用仓库提供的本地声音资源：
+
+- 构建脚本 `docker/build.sh` 会在构建前自动同步仓库根目录的 `sounds/` 到 `docker/sounds/`。
+- `docker/Dockerfile` 会删除镜像内默认的 `${FREESWITCH_PREFIX}/sounds`，并用构建上下文中的 `sounds/` 完整覆盖。
+
+使用方式：
+
+1) 在仓库根目录维护你的声音包：`./sounds/`（如 `en/`, `zh/`, `music/` 等结构）。
+2) 使用脚本构建（推荐）：
+  ```bash
+  cd docker
+  ./build.sh
+  ```
+3) 若直接使用 `docker build` 而不经过脚本，请确保 `docker/sounds/` 目录存在（本仓库已提供占位文件保证目录存在）。
+
+可选：若你不想下载 FreeSWITCH 官方声音包以减少构建时间/体积，可在构建时传参 `--build-arg INSTALL_SOUNDS=none`，镜像仍会使用你的本地 `sounds/` 内容。
+
+## �🎙️ MRCP 支持（mod_unimrcp）
 
 本镜像已内置并默认启用 `mod_unimrcp`，可作为 MRCP 客户端对接外部 MRCP Server（如百度/腾讯/讯飞等）。
 
