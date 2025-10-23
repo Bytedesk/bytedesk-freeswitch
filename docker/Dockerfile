@@ -299,6 +299,12 @@ COPY conf/ ${FREESWITCH_PREFIX}/conf/
 # 使用本地 sounds 覆盖 FreeSWITCH 默认 sounds（若存在，将在 build.sh 中准备）
 RUN rm -rf ${FREESWITCH_PREFIX}/sounds && mkdir -p ${FREESWITCH_PREFIX}/sounds
 COPY sounds/ ${FREESWITCH_PREFIX}/sounds/
+# 兼容路径与权限：确保 share 路径也能访问到 sounds，并授予可读/可执行权限
+RUN mkdir -p ${FREESWITCH_PREFIX}/share/freeswitch \
+        && if [ ! -e ${FREESWITCH_PREFIX}/share/freeswitch/sounds ]; then \
+                 ln -s ${FREESWITCH_PREFIX}/sounds ${FREESWITCH_PREFIX}/share/freeswitch/sounds; \
+             fi \
+        && chmod -R a+rX ${FREESWITCH_PREFIX}/sounds
 
 # 配置 ODBC（复制 ODBC 配置文件到系统目录）
 # 从 docker/etc/ 文件夹复制 ODBC 配置文件
