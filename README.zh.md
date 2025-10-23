@@ -32,6 +32,7 @@
 - ✅ 内置健康检查
 - ✅ 环境变量配置
 - ✅ 支持多架构（amd64/arm64）
+- ✅ 默认内置 MRCP 客户端支持（已编译并加载 mod_unimrcp）
 - ❌ mod_verto 已禁用（改用 SIP over WebSocket）
 
 ## 与官方镜像对比
@@ -137,6 +138,28 @@ docker compose up -d
 ## 配置说明
 
 ### 自定义配置文件
+### MRCP（mod_unimrcp）快速说明
+
+- 镜像已默认编译并加载 `mod_unimrcp`
+- 客户端 Profile：`conf/mrcp_profiles/baidu.xml`（请将 `server-ip` 改为你的 MRCP Server）
+- 客户端设置：`conf/autoload_configs/unimrcp.conf.xml`（`default-profile=baidu`）
+- 验证模块：`fs_cli -x "show modules | grep unimrcp"` 应看到 `mod_unimrcp`
+
+拨号计划示例：
+
+```xml
+<extension name="baidu_asr_test">
+  <condition field="destination_number" expression="^9001$">
+    <action application="answer"/>
+    <action application="sleep" data="1000"/>
+    <action application="speak" data="请说话"/>
+    <action application="play_and_detect_speech"
+            data="silence_stream://2000 mrcp:baidu {start-input-timers=false}builtin:grammar/boolean grammar.xml"/>
+    <action application="log" data="INFO 识别结果: ${detect_speech_result}"/>
+  </condition>
+</extension>
+```
+
 
 #### 重要：配置文件路径说明
 

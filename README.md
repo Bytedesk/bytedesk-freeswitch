@@ -32,6 +32,7 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - ✅ Health check enabled
 - ✅ Environment variable configuration
 - ✅ Multi-architecture support (amd64/arm64)
+- ✅ MRCP client support built-in (mod_unimrcp enabled by default)
 - ❌ mod_verto disabled (use SIP over WebSocket instead)
 
 ## Comparison with "Official" Image
@@ -141,6 +142,28 @@ docker compose up -d
 ## Configuration
 
 ### Custom Configuration Files
+### MRCP (mod_unimrcp) Quick Notes
+
+- The image ships with `mod_unimrcp` compiled and loaded by default.
+- Default client profile file: `conf/mrcp_profiles/baidu.xml` (edit `server-ip` to your MRCP server).
+- UniMRCP client settings file: `conf/autoload_configs/unimrcp.conf.xml` (`default-profile=baidu`).
+- Verify module: `fs_cli -x "show modules | grep unimrcp"` should list `mod_unimrcp`.
+
+Dialplan example:
+
+```xml
+<extension name="baidu_asr_test">
+  <condition field="destination_number" expression="^9001$">
+    <action application="answer"/>
+    <action application="sleep" data="1000"/>
+    <action application="speak" data="Please speak"/>
+    <action application="play_and_detect_speech"
+            data="silence_stream://2000 mrcp:baidu {start-input-timers=false}builtin:grammar/boolean grammar.xml"/>
+    <action application="log" data="INFO ASR result: ${detect_speech_result}"/>
+  </condition>
+</extension>
+```
+
 
 #### Important: Configuration Path Information
 

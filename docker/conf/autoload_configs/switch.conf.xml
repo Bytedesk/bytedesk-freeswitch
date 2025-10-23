@@ -191,15 +191,10 @@
     value="postgresql://freeswitch:@127.0.0.1/freeswitch?options=-c%20client_min_messages%3DNOTICE"
     /> -->
     <!-- 使用 vars.xml 中定义的数据库变量，通过 docker-entrypoint.sh 动态配置 -->
-    <param name="core-db-dsn" value="$${core_db_dsn}" />
-    <param name="odbc-skip-autocommit-flip" value="true" />
-    <!-- <param name="core-db-dsn"
-    value="mariadb://Server=${db_host};Port=${db_port};Database=${db_name};Uid=${db_username};Pwd=${db_password};"
-    /> -->
-    <!-- 配置数据库表前缀，此配置没用 -->
-    <!-- <param name="core-db-table-prefix" value="freeswitch_" /> -->
+    <!-- <param name="core-db-dsn" value="$${core_db_dsn}" /> -->
+    <!-- 直接引用vars 中 core_db_dsn，会导致字符串为空，所以使用下面字符串 -->
+    <param name="core-db-dsn" value="mariadb://Server=$${db_host};Port=$${db_port};Database=$${db_name};Uid=$${db_username};Pwd=$${db_password};" />
     <!-- <param name="core-db-dsn" value="dsn:username:password" /> -->
-    <!-- <param name="odbc-skip-autocommit-flip" value="true" /> -->
 
     <!-- 
 	 Allow to specify the sqlite db at a different location (In this example, move it to ramdrive for
