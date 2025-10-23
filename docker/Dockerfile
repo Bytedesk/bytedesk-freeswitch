@@ -247,10 +247,10 @@ RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
     # 在镜像中创建一个兼容头，替代在命令行注入带括号的宏定义（会导致 libtool/libgcc 命令解析错误）
     printf '%s\n' "#ifndef APR_COMPAT_H" "#define APR_COMPAT_H" "#include <apr-1/apr_errno.h>" "#ifndef apr_pool_mutex_set" "#define apr_pool_mutex_set(a,b) (APR_SUCCESS)" "#endif" "#endif" > /usr/local/include/apr_compat.h && \
     # 构建 UniMRCP（安装到 /usr/local，便于共享库与 pkg-config 路径统一） \
-    git clone https://github.com/unispeech/unimrcp.git && \
+    git clone --depth 1 https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
-    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include" \
+    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include -include apr_compat.h" \
     LDFLAGS="$(apr-1-config --link-ld --libs) $(apu-1-config --link-ld --libs)" \
     LIBS="$(apr-1-config --libs) $(apu-1-config --libs)" \
     ./configure --prefix=/usr/local && \
@@ -258,11 +258,11 @@ RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
     ldconfig && \
     cd .. && rm -rf unimrcp && \
     # 构建 mod_unimrcp（安装到 FreeSWITCH 模块目录） \
-    git clone https://github.com/freeswitch/mod_unimrcp.git && \
+    git clone --depth 1 https://github.com/freeswitch/mod_unimrcp.git && \
     cd mod_unimrcp && \
     export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
     ./bootstrap.sh && \
-    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include" \
+    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include -include apr_compat.h" \
     ./configure && \
     make -j"$(nproc)" && make install && \
     ldconfig && \
