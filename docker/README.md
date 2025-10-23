@@ -90,6 +90,21 @@ docker exec -it freeswitch fs_cli -p YOUR_PASSWORD
 docker compose down
 ```
 
+### 可选组件：UniMRCP / mod_unimrcp
+
+UniMRCP 与 mod_unimrcp 的源码构建在 CI（特别是多架构 buildx）和部分环境中较为脆弱，会因为底层系统库版本差异导致链接失败或编译无法通过。
+
+默认情况下镜像构建会跳过 UniMRCP（以提高稳定性与速度）。如需启用，请通过构建参数：
+
+```bash
+cd docker
+# 启用 UniMRCP 构建（注意：会显著增加构建时间，并可能需要额外运行时依赖）
+BUILD_UNIMRCP=1 ./build.sh
+```
+
+在 GitHub Actions 中也可通过 workflow 的 build step 添加 `--build-arg BUILD_UNIMRCP=1` 来启用。
+
+
 ### 🌐 镜像仓库
 
 - **Docker Hub**: `bytedesk/freeswitch:latest`

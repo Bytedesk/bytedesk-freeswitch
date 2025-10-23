@@ -242,31 +242,52 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
 # 确保所有共享库都被正确链接
 RUN ldconfig
 
-# 编译安装 UniMRCP 与 mod_unimrcp（启用 MRCP 客户端支持）
-RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
-    # 在镜像中创建一个兼容头，替代在命令行注入带括号的宏定义（会导致 libtool/libgcc 命令解析错误）
-    printf '%s\n' "#ifndef APR_COMPAT_H" "#define APR_COMPAT_H" "#include <apr-1/apr_errno.h>" "#ifndef apr_pool_mutex_set" "#define apr_pool_mutex_set(a,b) (APR_SUCCESS)" "#endif" "#endif" > /usr/local/include/apr_compat.h && \
-    # 构建 UniMRCP（安装到 /usr/local，便于共享库与 pkg-config 路径统一） \
+# UniMRCP 构建选项（默认禁用，启用需传 --build-arg BUILD_UNIMRCP=1）
+# 按照官方文档编译：先构建 APR/APR-Util 依赖，再构建 UniMRCP 和 mod_unimrcp
+ARG BUILD_UNIMRCP=0
+RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
+    echo "Building UniMRCP and mod_unimrcp for MRCP support (following official guide)..."; \
+    cd /root && \
+    # 步骤1：下载并编译 UniMRCP 依赖包（APR、APR-Util）
+    echo "Step 1: Building UniMRCP dependencies (APR, APR-Util)..." && \
+    wget -q https://www.unimrcp.org/project/component-view/unimrcp-deps-1-6-0-tar-gz/download -O unimrcp-deps-1.6.0.tar.gz && \
+    tar xzf unimrcp-deps-1.6.0.tar.gz && \
+    cd unimrcp-deps-1.6.0 && \
+    # 编译 APR
+    cd libs/apr && \
+    ./configure --prefix=/usr/local/apr && \
+    make -j"$(nproc)" && make install && \
+    cd .. && \
+    # 编译 APR-Util
+    cd apr-util && \
+    ./configure --prefix=/usr/local/apr --with-apr=/usr/local/apr && \
+    make -j"$(nproc)" && make install && \
+    cd ../.. && \
+    ldconfig && \
+    cd /root && rm -rf unimrcp-deps-1.6.0 unimrcp-deps-1.6.0.tar.gz && \
+    # 步骤2：编译 UniMRCP
+    echo "Step 2: Building UniMRCP..." && \
     git clone --depth 1 https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
-    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include -include apr_compat.h" \
-    LDFLAGS="$(apr-1-config --link-ld --libs) $(apu-1-config --link-ld --libs)" \
-    LIBS="$(apr-1-config --libs) $(apu-1-config --libs)" \
-    ./configure --prefix=/usr/local && \
-    make -j"$(nproc)" && make install && \
-    ldconfig && \
-    cd .. && rm -rf unimrcp && \
-    # 构建 mod_unimrcp（安装到 FreeSWITCH 模块目录） \
-    git clone --depth 1 https://github.com/freeswitch/mod_unimrcp.git && \
-    cd mod_unimrcp && \
-    export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
-    ./bootstrap.sh && \
-    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -I/usr/local/include -include apr_compat.h" \
     ./configure && \
     make -j"$(nproc)" && make install && \
     ldconfig && \
-    cd .. && rm -rf mod_unimrcp
+    cd /root && rm -rf unimrcp && \
+    # 步骤3：编译并安装 mod_unimrcp
+    echo "Step 3: Building mod_unimrcp..." && \
+    git clone --depth 1 https://github.com/freeswitch/mod_unimrcp.git && \
+    cd mod_unimrcp && \
+    export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:/usr/local/unimrcp/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
+    ./bootstrap.sh && \
+    ./configure && \
+    make -j"$(nproc)" && make install && \
+    ldconfig && \
+    cd /root && rm -rf mod_unimrcp && \
+    echo "UniMRCP and mod_unimrcp build completed successfully."; \
+    else \
+    echo "Skipping UniMRCP and mod_unimrcp build (BUILD_UNIMRCP=${BUILD_UNIMRCP})"; \
+    fi
 
 # 创建符号链接
 RUN ln -sf ${FREESWITCH_PREFIX}/bin/freeswitch /usr/bin/freeswitch && \
