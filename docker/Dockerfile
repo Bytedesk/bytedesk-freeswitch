@@ -242,35 +242,13 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
 # 确保所有共享库都被正确链接
 RUN ldconfig
 
-# 验证并确保 APR 提供所需符号（CI 多架构环境下偶发旧版/不完整 APR）
-RUN echo "Checking APR versions and required symbols..." && \
-    (apr-1-config --version || true) && (apu-1-config --version || true) && \
-    APR_LIB="$(apr-1-config --libdir)/libapr-1.so" && \
-    echo "APR lib: ${APR_LIB}" && \
-    if ! nm -D "${APR_LIB}" 2>/dev/null | grep -q 'apr_pool_mutex_set'; then \
-        echo "apr_pool_mutex_set not found, building APR from source..." && \
-        apt-get update && apt-get install -y --no-install-recommends wget && \
-        wget -q https://downloads.apache.org/apr/apr-1.7.4.tar.gz && \
-        tar -xf apr-1.7.4.tar.gz && cd apr-1.7.4 && \
-        ./configure --prefix=/usr --libdir=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH) && \
-        make -j"$(nproc)" && make install && ldconfig && \
-        cd .. && rm -rf apr-1.7.4 apr-1.7.4.tar.gz && \
-        wget -q https://downloads.apache.org/apr/apr-util-1.6.3.tar.gz && \
-        tar -xf apr-util-1.6.3.tar.gz && cd apr-util-1.6.3 && \
-        ./configure --prefix=/usr --with-apr=/usr/bin/apr-1-config --with-expat=/usr && \
-        make -j"$(nproc)" && make install && ldconfig && \
-        cd .. && rm -rf apr-util-1.6.3 apr-util-1.6.3.tar.gz; \
-    else \
-        echo "APR symbol apr_pool_mutex_set found."; \
-    fi
-
 # 编译安装 UniMRCP 与 mod_unimrcp（启用 MRCP 客户端支持）
 RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
     # 构建 UniMRCP（安装到 /usr/local，便于共享库与 pkg-config 路径统一） \
     git clone https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
-    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes)" \
+    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes) -Dapr_pool_mutex_set\(a,b\)=APR_SUCCESS" \
     LDFLAGS="$(apr-1-config --link-ld --libs) $(apu-1-config --link-ld --libs)" \
     LIBS="$(apr-1-config --libs) $(apu-1-config --libs)" \
     ./configure --prefix=/usr/local && \
