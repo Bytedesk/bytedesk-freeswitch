@@ -144,13 +144,10 @@ RUN git clone --depth 1 -b release/4.4 https://github.com/FFmpeg/FFmpeg.git && \
     ldconfig && \
     cd .. && rm -rf FFmpeg
 
-# 编译安装 libuuid
-RUN wget https://jaist.dl.sourceforge.net/project/libuuid/libuuid-1.0.3.tar.gz && \
-    tar -zxvf libuuid-1.0.3.tar.gz && \
-    cd libuuid-1.0.3 && \
-    ./configure && \
-    make && make install && \
-    cd .. && rm -rf libuuid-1.0.3 libuuid-1.0.3.tar.gz
+# 注意：不要从源码安装旧版 libuuid（会与系统版冲突，导致 APR 链接到错误的符号）
+## 之前这里曾手动构建 libuuid-1.0.3，会覆盖系统 /usr/local/lib 下的 libuuid，
+## 导致在构建 UniMRCP 时出现 `uuid_generate@UUID_1.0` 未定义的链接错误。
+## 已移除该步骤，改用系统包 uuid-dev/libuuid1（已在 apt 安装列表中）。
 
 # 编译安装 FreeSWITCH
 RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.git && \
@@ -251,6 +248,9 @@ RUN echo "Building UniMRCP and mod_unimrcp for MRCP support..." && \
     git clone https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
+    CPPFLAGS="$(apr-1-config --cflags) $(apu-1-config --includes)" \
+    LDFLAGS="$(apr-1-config --link-ld --libs) $(apu-1-config --link-ld --libs)" \
+    LIBS="$(apr-1-config --libs) $(apu-1-config --libs)" \
     ./configure --prefix=/usr/local && \
     make -j"$(nproc)" && make install && \
     ldconfig && \
