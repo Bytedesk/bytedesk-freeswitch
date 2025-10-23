@@ -82,13 +82,12 @@ services:
       
       # 存储目录
       - freeswitch_storage:/usr/local/freeswitch/storage
-
-  # ODBC 配置（通过只读挂载覆盖容器内 /etc/odbc*.ini）
-  # 注意：compose 文件位于 docker/ 下，因此此处使用相对路径指向仓库根目录的 deploy/
-  - ../deploy/freeswitch/odbc/odbc.ini:/etc/odbc.ini:ro
-  - ../deploy/freeswitch/odbc/odbcinst.ini:/etc/odbcinst.ini:ro
+      # ODBC 配置（通过只读挂载覆盖容器内 /etc/odbc*.ini）
+      # 注意：compose 文件位于 docker/ 下，因此此处使用相对路径指向仓库根目录的 deploy/
+      - ../deploy/freeswitch/odbc/odbc.ini:/etc/odbc.ini:ro
+      - ../deploy/freeswitch/odbc/odbcinst.ini:/etc/odbcinst.ini:ro
     
-    # 健康检查
+  # 健康检查
     healthcheck:
       test: ["CMD", "fs_cli", "-p", "bytedesk123", "-x", "status"]
       interval: 30s
