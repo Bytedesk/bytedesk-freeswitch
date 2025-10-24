@@ -12,4 +12,4 @@ docker/mrcp/mrcp_server_baidu/mrcp-server/plugin/libbaidu-asr.so
 We recommend you avoid committing these files or use Git LFS to store large files on
 GitHub.
  - [x] 因体积太大，无法上传到 GitHub，取消使用本地 docker/mrcp_server_baidu，改为容器启动时从 URL 下载（已在入口脚本实现，支持 BAIDU_MRCP_URL 覆盖）
-- [] 能否修改为在编译freeswitch的时候，直接将mrcp_server_baidu直接下载并打包到镜像中，而不是在启动的时候去单独下载
+- [x] 能否修改为在编译 FreeSWITCH 的时候，直接将 mrcp_server_baidu 下载并打包到镜像中（已实现：Dockerfile 构建期通过 BAIDU_MRCP_URL 下载并解压，入口脚本仅负责启动）

@@ -63,41 +63,11 @@ log_info "IPv6 configurations disabled successfully"
 # ============================================
 
 if [ "${BAIDU_MRCP_ENABLE:-1}" = "1" ]; then
-    # 如果目录不存在则尝试下载并解压
-    if [ ! -d "${BAIDU_MRCP_BASE}" ]; then
-        mkdir -p "${BAIDU_MRCP_BASE}"
-    fi
-
-    # 探测已存在的布局
+    # 探测构建期已解压的布局
     if [ -d "${BAIDU_MRCP_BASE}/mrcp-server" ]; then
         BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp-server"
     elif [ -d "${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server" ]; then
         BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server"
-    fi
-
-    # 如未找到，则执行下载
-    if [ -z "${BAIDU_MRCP_DIR}" ]; then
-        URL=${BAIDU_MRCP_URL:-"https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz"}
-        TMP_TAR="${BAIDU_MRCP_BASE}/baidu-mrcp-server.tar.gz"
-        log_info "Downloading Baidu MRCP Server from ${URL} ..."
-        if command -v curl >/dev/null 2>&1; then
-            curl -L -o "${TMP_TAR}" "${URL}" || log_warn "curl download failed"
-        fi
-        if [ ! -s "${TMP_TAR}" ] && command -v wget >/dev/null 2>&1; then
-            wget -O "${TMP_TAR}" "${URL}" || log_warn "wget download failed"
-        fi
-        if [ -s "${TMP_TAR}" ]; then
-            tar -xzf "${TMP_TAR}" -C "${BAIDU_MRCP_BASE}" && rm -f "${TMP_TAR}"
-        else
-            log_warn "Baidu MRCP package not downloaded; skipping MRCP setup."
-        fi
-
-        # 重新探测布局
-        if [ -d "${BAIDU_MRCP_BASE}/mrcp-server" ]; then
-            BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp-server"
-        elif [ -d "${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server" ]; then
-            BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server"
-        fi
     fi
 
     if [ -n "${BAIDU_MRCP_DIR}" ] && [ -d "${BAIDU_MRCP_DIR}" ]; then
@@ -146,23 +116,14 @@ if [ "${BAIDU_MRCP_ENABLE:-1}" = "1" ]; then
             "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml"
     fi
 
-        # 6) 首次初始化工具链（如存在 bootstrap.sh）
-        if [ -x "${BAIDU_MRCP_BASE}/bootstrap.sh" ]; then
-            log_info "Running MRCP bootstrap.sh ..."
-            "${BAIDU_MRCP_BASE}/bootstrap.sh" || log_warn "bootstrap.sh failed"
-        elif [ -x "${BAIDU_MRCP_BASE}/mrcp_server_baidu/bootstrap.sh" ]; then
-            log_info "Running MRCP bootstrap.sh ..."
-            "${BAIDU_MRCP_BASE}/mrcp_server_baidu/bootstrap.sh" || log_warn "bootstrap.sh failed"
-        fi
-
-        # 7) 启动 MRCP Server（后台）
+            # 6) 启动 MRCP Server（后台）
     log_info "Starting Baidu MRCP Server on 127.0.0.1:${BAIDU_MRCP_SIP_PORT}..."
     (
       cd "${BAIDU_MRCP_DIR}" && \
       ./bin/unimrcpserver -r . >/var/log/unimrcpserver.out 2>&1 &
     ) || log_warn "Failed to start unimrcpserver in background."
         else
-            log_warn "Baidu MRCP directory not found after download; skipping MRCP startup."
+                log_warn "Baidu MRCP directory not found in image; skipping MRCP startup."
         fi
 else
     log_info "Baidu MRCP Server disabled or not found; skipping."

@@ -75,8 +75,7 @@ services:
   - BAIDU_SECRET_KEY=your_secret_key
   # 是否保存音频（1=保存，0=不保存）
   - BAIDU_MRCP_SAVE_AUDIO=1
-  # MRCP Server 下载地址（如需覆盖）
-  - BAIDU_MRCP_URL=https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz
+  # MRCP Server 下载地址（构建期使用，如需覆盖请用 --build-arg BAIDU_MRCP_URL）
     
     # 数据卷挂载
     volumes:

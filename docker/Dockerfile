@@ -25,8 +25,11 @@ ENV BAIDU_MRCP_ENABLE=1 \
     BAIDU_SECRET_KEY="" \
     BAIDU_MRCP_SIP_PORT=5070 \
     BAIDU_MRCP_CONTROL_PORT=1544 \
-    BAIDU_MRCP_SAVE_AUDIO=1 \
-    BAIDU_MRCP_URL="https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz"
+    BAIDU_MRCP_SAVE_AUDIO=1
+
+# 在构建期下载 MRCP Server 包（可通过 --build-arg 覆盖）
+ARG BAIDU_MRCP_URL="https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz"
+ENV BAIDU_MRCP_URL=${BAIDU_MRCP_URL}
 
 # 可选构建参数：
 # BUILD_SIGNALWIRE=1 启用 signalwire-c / mod_signalwire 依赖链 (默认 0)
@@ -316,8 +319,23 @@ RUN mkdir -p ${FREESWITCH_PREFIX}/share/freeswitch \
              fi \
         && chmod -R a+rX ${FREESWITCH_PREFIX}/sounds
 
-# 不再内置 MRCP Server 包（体积过大），改为在容器启动时按 URL 下载到 /opt/mrcp/baidu
-RUN mkdir -p /opt/mrcp/baidu
+# 构建期下载并解压 Baidu MRCP Server 到 /opt/mrcp/baidu
+RUN set -eux; \
+        mkdir -p /opt/mrcp/baidu; \
+        if command -v curl >/dev/null 2>&1; then \
+            curl -L -o /tmp/baidu-mrcp-server.tar.gz "${BAIDU_MRCP_URL}"; \
+        else \
+            wget -O /tmp/baidu-mrcp-server.tar.gz "${BAIDU_MRCP_URL}"; \
+        fi; \
+        tar -xzf /tmp/baidu-mrcp-server.tar.gz -C /opt/mrcp/baidu; \
+        rm -f /tmp/baidu-mrcp-server.tar.gz; \
+        # 运行 bootstrap.sh（可能存在于两种目录布局之一）
+        if [ -x /opt/mrcp/baidu/bootstrap.sh ]; then \
+            /opt/mrcp/baidu/bootstrap.sh || true; \
+        elif [ -x /opt/mrcp/baidu/mrcp_server_baidu/bootstrap.sh ]; then \
+            /opt/mrcp/baidu/mrcp_server_baidu/bootstrap.sh || true; \
+        fi; \
+        chmod -R a+rX /opt/mrcp/baidu
 
 # 配置 ODBC（复制 ODBC 配置文件到系统目录）
 # 从 docker/etc/ 文件夹复制 ODBC 配置文件
