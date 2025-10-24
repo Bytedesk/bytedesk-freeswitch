@@ -103,13 +103,13 @@ services:
       FREESWITCH_EXTERNAL_IP: ${EXTERNAL_IP}
       TZ: Asia/Shanghai
       # Built-in Baidu MRCP Server configuration
-      BAIDU_MRCP_ENABLE: "1"
-      BAIDU_APPID: your_app_id
-      BAIDU_API_KEY: your_api_key
-      BAIDU_SECRET_KEY: your_secret_key
-      BAIDU_MRCP_SIP_PORT: "5070"
-      BAIDU_MRCP_CONTROL_PORT: "1544"
-      BAIDU_MRCP_SAVE_AUDIO: "1"
+      # BAIDU_MRCP_ENABLE: "1"
+      # BAIDU_APPID: your_app_id
+      # BAIDU_API_KEY: your_api_key
+      # BAIDU_SECRET_KEY: your_secret_key
+      # BAIDU_MRCP_SIP_PORT: "5070"
+      # BAIDU_MRCP_CONTROL_PORT: "1544"
+      # BAIDU_MRCP_SAVE_AUDIO: "1"
     volumes:
       # Optional: mount custom configuration directory (actual runtime path: /usr/local/freeswitch/etc/freeswitch)
       # - ./freeswitch-conf:/usr/local/freeswitch/etc/freeswitch
