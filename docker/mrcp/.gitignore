@@ -1,0 +1,4 @@
+# Ignore local Baidu MRCP bundle to avoid committing huge binaries
+mrcp_server_baidu/
+*.tar.gz
+mrcp_server_baidu/*

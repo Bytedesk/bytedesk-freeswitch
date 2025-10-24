@@ -1,0 +1,2 @@
+# Store Baidu MRCP large plugins via Git LFS
+docker/mrcp/mrcp_server_baidu/mrcp-server/plugin/*.so filter=lfs diff=lfs merge=lfs -text

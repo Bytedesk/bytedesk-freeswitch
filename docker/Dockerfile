@@ -18,6 +18,16 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 # WARNING: Change this in production environment for security!
 ENV FREESWITCH_DEFAULT_PASSWORD=1234
 
+# Baidu MRCP server envs (can be overridden at runtime via Compose)
+ENV BAIDU_MRCP_ENABLE=1 \
+    BAIDU_APPID="" \
+    BAIDU_API_KEY="" \
+    BAIDU_SECRET_KEY="" \
+    BAIDU_MRCP_SIP_PORT=5070 \
+    BAIDU_MRCP_CONTROL_PORT=1544 \
+    BAIDU_MRCP_SAVE_AUDIO=1 \
+    BAIDU_MRCP_URL="https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz"
+
 # 可选构建参数：
 # BUILD_SIGNALWIRE=1 启用 signalwire-c / mod_signalwire 依赖链 (默认 0)
 # 注意：mod_verto 已彻底禁用，WebRTC 可通过 SIP.js + mod_sofia (ws/wss) 实现
@@ -305,6 +315,9 @@ RUN mkdir -p ${FREESWITCH_PREFIX}/share/freeswitch \
                  ln -s ${FREESWITCH_PREFIX}/sounds ${FREESWITCH_PREFIX}/share/freeswitch/sounds; \
              fi \
         && chmod -R a+rX ${FREESWITCH_PREFIX}/sounds
+
+# 不再内置 MRCP Server 包（体积过大），改为在容器启动时按 URL 下载到 /opt/mrcp/baidu
+RUN mkdir -p /opt/mrcp/baidu
 
 # 配置 ODBC（复制 ODBC 配置文件到系统目录）
 # 从 docker/etc/ 文件夹复制 ODBC 配置文件
