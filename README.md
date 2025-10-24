@@ -32,7 +32,8 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - ✅ Health check enabled
 - ✅ Environment variable configuration
 - ✅ Multi-architecture support (amd64/arm64)
-- ✅ MRCP client support built-in (mod_unimrcp enabled by default)
+- ✅ Baidu MRCP Server integrated by default (bundled in image and auto-started)
+- ✅ MRCP client support available (mod_unimrcp, opt-in build)
 - ❌ mod_verto disabled (use SIP over WebSocket instead)
 
 ## Comparison with "Official" Image
@@ -142,9 +143,64 @@ docker compose up -d
 ## Configuration
 
 ### Custom Configuration Files
-### MRCP (mod_unimrcp) Quick Notes
+### Baidu MRCP Server (built-in)
 
-- The image ships with `mod_unimrcp` compiled and loaded by default.
+- The image downloads and bundles Baidu MRCP Server during build. On container start, it writes configs from env vars and starts the server in background.
+- FreeSWITCH connects to the built-in server via `127.0.0.1:5070` by default (`mrcp_profiles/baidu.xml`).
+- No port mapping is required for typical usage. If you want to expose the MRCP server for external clients, publish `5070/udp,tcp`, `1544/tcp`, and `1554/tcp`.
+
+Runtime environment variables:
+
+- `BAIDU_MRCP_ENABLE`: enable built-in MRCP server (default 1)
+- `BAIDU_APPID`: Baidu AppID
+- `BAIDU_API_KEY`: Baidu API Key (maps to AUTH_APPKEY in config)
+- `BAIDU_SECRET_KEY`: Baidu Secret Key (not used in current sample configs, reserved)
+- `BAIDU_MRCP_SIP_PORT`: MRCP server SIP port (default 5070 to avoid FS 5060 conflict)
+- `BAIDU_MRCP_CONTROL_PORT`: MRCPv2 control port (default 1544)
+- `BAIDU_MRCP_SAVE_AUDIO`: whether to save audio (1/0, default 1)
+
+Build-time argument:
+
+- `BAIDU_MRCP_URL`: download URL of the Baidu MRCP Server tarball (default `https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz`)
+
+Compose snippet (partial):
+
+```yaml
+environment:
+  - BAIDU_MRCP_ENABLE=1
+  - BAIDU_APPID=your_app_id
+  - BAIDU_API_KEY=your_api_key
+  - BAIDU_SECRET_KEY=your_secret_key
+  - BAIDU_MRCP_SIP_PORT=5070
+  - BAIDU_MRCP_CONTROL_PORT=1544
+  - BAIDU_MRCP_SAVE_AUDIO=1
+```
+
+Verify runtime:
+
+```bash
+# Check MRCP server output in container logs
+docker logs -f freeswitch-bytedesk | tail -n 200
+# Or inspect detailed log inside container
+docker exec -it freeswitch-bytedesk bash -lc 'tail -n 200 /var/log/unimrcpserver.out'
+```
+
+FreeSWITCH default profile: `conf/mrcp_profiles/baidu.xml`
+
+```xml
+<profile name="baidu" version="2">
+  <param name="server-ip" value="127.0.0.1"/>
+  <param name="server-port" value="5070"/>
+  <param name="sip-transport" value="udp"/>
+  <recogparams>
+    <param name="start-input-timers" value="false"/>
+  </recogparams>
+</profile>
+```
+
+### MRCP (mod_unimrcp) Quick Notes (client)
+
+- The image includes loading config for mod_unimrcp. To use it as a client inside the image, enable UniMRCP build at image build time (`--build-arg BUILD_UNIMRCP=1`).
 - Default client profile file: `conf/mrcp_profiles/baidu.xml` (edit `server-ip` to your MRCP server).
 - UniMRCP client settings file: `conf/autoload_configs/unimrcp.conf.xml` (`default-profile=baidu`).
 - Verify module: `fs_cli -x "show modules | grep unimrcp"` should list `mod_unimrcp`.

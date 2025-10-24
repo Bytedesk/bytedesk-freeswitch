@@ -32,7 +32,8 @@
 - ✅ 内置健康检查
 - ✅ 环境变量配置
 - ✅ 支持多架构（amd64/arm64）
-- ✅ 默认内置 MRCP 客户端支持（已编译并加载 mod_unimrcp）
+- ✅ 默认集成百度 MRCP Server（镜像内置并随容器启动）
+- ✅ 提供 MRCP 客户端支持（mod_unimrcp，可按需开启源码构建）
 - ❌ mod_verto 已禁用（改用 SIP over WebSocket）
 
 ## 与官方镜像对比
@@ -138,9 +139,64 @@ docker compose up -d
 ## 配置说明
 
 ### 自定义配置文件
-### MRCP（mod_unimrcp）快速说明
+### 百度 MRCP Server（内置）
 
-- 镜像已默认编译并加载 `mod_unimrcp`
+- 镜像在构建期下载并打包百度 MRCP Server，容器启动时自动按环境变量写入配置并后台启动。
+- FreeSWITCH 默认通过本地 `127.0.0.1:5070` 对接内置 MRCP Server（`mrcp_profiles/baidu.xml`）。
+- 无需对外暴露 MRCP 端口；如需外部使用 MRCP Server，可自行映射 `5070/udp,tcp`、`1544/tcp`、`1554/tcp`。
+
+环境变量（容器运行时设置）：
+
+- `BAIDU_MRCP_ENABLE`：是否启用内置 MRCP Server（默认 1）
+- `BAIDU_APPID`：百度 AppID
+- `BAIDU_API_KEY`：百度 API Key（对应配置键 AUTH_APPKEY）
+- `BAIDU_SECRET_KEY`：百度 Secret Key（当前示例配置未使用，预留）
+- `BAIDU_MRCP_SIP_PORT`：MRCP Server 的 SIP 端口（默认 5070，避免与 FS 5060 冲突）
+- `BAIDU_MRCP_CONTROL_PORT`：MRCPv2 控制端口（默认 1544）
+- `BAIDU_MRCP_SAVE_AUDIO`：是否保存音频（1/0，默认 1）
+
+构建参数（镜像构建时使用）：
+
+- `BAIDU_MRCP_URL`：百度 MRCP Server 压缩包下载地址，默认 `https://www.weiyuai.cn/download/mrcp_server_baidu.tar.gz`
+
+Compose 配置示例（节选）：
+
+```yaml
+environment:
+  - BAIDU_MRCP_ENABLE=1
+  - BAIDU_APPID=your_app_id
+  - BAIDU_API_KEY=your_api_key
+  - BAIDU_SECRET_KEY=your_secret_key
+  - BAIDU_MRCP_SIP_PORT=5070
+  - BAIDU_MRCP_CONTROL_PORT=1544
+  - BAIDU_MRCP_SAVE_AUDIO=1
+```
+
+验证运行：
+
+```bash
+# 查看 MRCP Server 启动输出
+docker logs -f freeswitch-bytedesk | tail -n 200
+# 或容器内查看详细日志
+docker exec -it freeswitch-bytedesk bash -lc 'tail -n 200 /var/log/unimrcpserver.out'
+```
+
+FreeSWITCH 端默认 Profile：`conf/mrcp_profiles/baidu.xml`
+
+```xml
+<profile name="baidu" version="2">
+  <param name="server-ip" value="127.0.0.1"/>
+  <param name="server-port" value="5070"/>
+  <param name="sip-transport" value="udp"/>
+  <recogparams>
+    <param name="start-input-timers" value="false"/>
+  </recogparams>
+</profile>
+```
+
+### MRCP（mod_unimrcp）快速说明（客户端）
+
+- 镜像已包含 mod_unimrcp 的加载配置；如需在镜像内直接使用 MRCP 客户端，请在构建时开启 UniMRCP 源码构建（`--build-arg BUILD_UNIMRCP=1`）。
 - 客户端 Profile：`conf/mrcp_profiles/baidu.xml`（请将 `server-ip` 改为你的 MRCP Server）
 - 客户端设置：`conf/autoload_configs/unimrcp.conf.xml`（`default-profile=baidu`）
 - 验证模块：`fs_cli -x "show modules | grep unimrcp"` 应看到 `mod_unimrcp`
@@ -152,7 +208,7 @@ docker compose up -d
   <condition field="destination_number" expression="^9001$">
     <action application="answer"/>
     <action application="sleep" data="1000"/>
-    <action application="speak" data="请说话"/>
+  <action application="speak" data="请说话"/>
     <action application="play_and_detect_speech"
             data="silence_stream://2000 mrcp:baidu {start-input-timers=false}builtin:grammar/boolean grammar.xml"/>
     <action application="log" data="INFO 识别结果: ${detect_speech_result}"/>
