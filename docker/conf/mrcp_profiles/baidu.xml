@@ -1,7 +1,7 @@
 <profile name="baidu" version="2">
-  <!-- 修改为实际的百度 MRCP Server 地址 -->
-  <param name="server-ip" value="your_server_ip"/>
-  <param name="server-port" value="5060"/>
+  <!-- 默认指向容器内本地 MRCP 服务，端口由入口脚本按需重写 -->
+  <param name="server-ip" value="127.0.0.1"/>
+  <param name="server-port" value="5070"/>
   <param name="resource-location" value=""/>
   <param name="sip-transport" value="udp"/>
 
