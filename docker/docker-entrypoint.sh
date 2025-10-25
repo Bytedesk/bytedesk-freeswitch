@@ -66,6 +66,8 @@ if [ "${BAIDU_MRCP_ENABLE:-1}" = "1" ]; then
     # 探测构建期已解压的布局
     if [ -d "${BAIDU_MRCP_BASE}/mrcp-server" ]; then
         BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp-server"
+    elif [ -d "${BAIDU_MRCP_BASE}/MRCPServer/mrcp-server" ]; then
+        BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/MRCPServer/mrcp-server"
     elif [ -d "${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server" ]; then
         BAIDU_MRCP_DIR="${BAIDU_MRCP_BASE}/mrcp_server_baidu/mrcp-server"
     fi
@@ -73,58 +75,69 @@ if [ "${BAIDU_MRCP_ENABLE:-1}" = "1" ]; then
     if [ -n "${BAIDU_MRCP_DIR}" ] && [ -d "${BAIDU_MRCP_DIR}" ]; then
         log_info "Configuring Baidu MRCP Server..."
 
-    # 确保运行库路径包含 MRCP lib
-    export LD_LIBRARY_PATH="${BAIDU_MRCP_DIR}/lib:${LD_LIBRARY_PATH}"
+        # 确保运行库路径包含 MRCP lib
+        export LD_LIBRARY_PATH="${BAIDU_MRCP_DIR}/lib:${LD_LIBRARY_PATH}"
 
-    # 1) 配置 SIP 端口，避免与 FreeSWITCH 冲突（默认 5070）
-    BAIDU_MRCP_SIP_PORT=${BAIDU_MRCP_SIP_PORT:-5070}
-    sed -i "s#<sip-port>[0-9]\+#<sip-port>${BAIDU_MRCP_SIP_PORT}#" \
-        "${BAIDU_MRCP_DIR}/conf/unimrcpserver.xml"
+        # 1) 配置 SIP 端口，避免与 FreeSWITCH 冲突（默认 5070）
+        BAIDU_MRCP_SIP_PORT=${BAIDU_MRCP_SIP_PORT:-5070}
+        sed -i "s#<sip-port>[0-9]\+#<sip-port>${BAIDU_MRCP_SIP_PORT}#" \
+            "${BAIDU_MRCP_DIR}/conf/unimrcpserver.xml"
 
-    # 2) 配置 IP 获取方式为 auto（若文件已有则保持）
-    # 文件默认即为 <ip type="auto"/>，此处仅确保没有被手动写死
-    sed -i "s#<ip>\([0-9\.]*\)</ip>#<ip type=\"auto\"/>#g" \
-        "${BAIDU_MRCP_DIR}/conf/unimrcpserver.xml" || true
+        # 2) 配置 IP 获取方式为 auto（若文件已有则保持）
+        # 文件默认即为 <ip type=\"auto\"/>，此处仅确保没有被手动写死
+        sed -i "s#<ip>\([0-9\.]*\)</ip>#<ip type=\"auto\"/>#g" \
+            "${BAIDU_MRCP_DIR}/conf/unimrcpserver.xml" || true
 
-    # 3) 配置监测检查地址（默认 127.0.0.1 1544）
-    BAIDU_MRCP_CONTROL_PORT=${BAIDU_MRCP_CONTROL_PORT:-1544}
-    sed -i "s#^_check_cmd_pro=.*#_check_cmd_pro=\"./bin/check 127.0.0.1 ${BAIDU_MRCP_CONTROL_PORT}\"#" \
-        "${BAIDU_MRCP_DIR}/conf/unimrcpserver_control.conf" || true
+        # 3) 配置监测检查地址（默认 127.0.0.1 1544）
+        BAIDU_MRCP_CONTROL_PORT=${BAIDU_MRCP_CONTROL_PORT:-1544}
+        sed -i "s#^_check_cmd_pro=.*#_check_cmd_pro=\"./bin/check 127.0.0.1 ${BAIDU_MRCP_CONTROL_PORT}\"#" \
+            "${BAIDU_MRCP_DIR}/conf/unimrcpserver_control.conf" || true
 
-    # 4) 写入鉴权信息（ASR/TTS），以及是否保存音频
-    if [ -n "${BAIDU_APPID}" ]; then
-        sed -i "s#^AUTH_APPID\s*:.*#AUTH_APPID : ${BAIDU_APPID}#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
-        sed -i "s#^AUTH_APPID\s*:.*#AUTH_APPID : ${BAIDU_APPID}#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
-    fi
-    if [ -n "${BAIDU_API_KEY}" ]; then
-        # 注意：配置文件中键名为 AUTH_APPKEY
-        sed -i "s#^AUTH_APPKEY\s*:.*#AUTH_APPKEY : \"${BAIDU_API_KEY}\"#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
-        sed -i "s#^AUTH_APPKEY\s*:.*#AUTH_APPKEY : \"${BAIDU_API_KEY}\"#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
-    fi
-    if [ -n "${BAIDU_SECRET_KEY}" ]; then
-        # 若后续版本需要 SECRET，可在此写入相应键；当前样例文件未使用 SECRET
-        log_warn "BAIDU_SECRET_KEY provided but not used by current MRCP config files."
-    fi
-    sed -i "s#^NEED_SAVE_AUDIO\s*:.*#NEED_SAVE_AUDIO : ${BAIDU_MRCP_SAVE_AUDIO:-1}#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
-    sed -i "s#^NEED_SAVE_AUDIO\s*:.*#NEED_SAVE_AUDIO : ${BAIDU_MRCP_SAVE_AUDIO:-1}#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
-
-    # 5) 将 FreeSWITCH 的 mrcp_profiles/baidu.xml 指向本地 MRCP 服务
-    if [ -f "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml" ]; then
-        sed -i "s#value=\"your_server_ip\"#value=\"127.0.0.1\"#" \
-            "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml"
-        sed -i "s#<param name=\"server-port\" value=\"[0-9]\+\"/>#<param name=\"server-port\" value=\"${BAIDU_MRCP_SIP_PORT}\"/>#" \
-            "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml"
-    fi
-
-            # 6) 启动 MRCP Server（后台）
-    log_info "Starting Baidu MRCP Server on 127.0.0.1:${BAIDU_MRCP_SIP_PORT}..."
-    (
-      cd "${BAIDU_MRCP_DIR}" && \
-      ./bin/unimrcpserver -r . >/var/log/unimrcpserver.out 2>&1 &
-    ) || log_warn "Failed to start unimrcpserver in background."
-        else
-                log_warn "Baidu MRCP directory not found in image; skipping MRCP startup."
+        # 4) 写入鉴权信息（ASR/TTS），以及是否保存音频
+        if [ -n "${BAIDU_APPID}" ]; then
+            sed -i "s#^AUTH_APPID\s*:.*#AUTH_APPID : ${BAIDU_APPID}#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
+            sed -i "s#^AUTH_APPID\s*:.*#AUTH_APPID : ${BAIDU_APPID}#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
         fi
+        if [ -n "${BAIDU_API_KEY}" ]; then
+            # 注意：配置文件中键名为 AUTH_APPKEY
+            sed -i "s#^AUTH_APPKEY\s*:.*#AUTH_APPKEY : \"${BAIDU_API_KEY}\"#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
+            sed -i "s#^AUTH_APPKEY\s*:.*#AUTH_APPKEY : \"${BAIDU_API_KEY}\"#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
+        fi
+        if [ -n "${BAIDU_SECRET_KEY}" ]; then
+            # 若后续版本需要 SECRET，可在此写入相应键；当前样例文件未使用 SECRET
+            log_warn "BAIDU_SECRET_KEY provided but not used by current MRCP config files."
+        fi
+        sed -i "s#^NEED_SAVE_AUDIO\s*:.*#NEED_SAVE_AUDIO : ${BAIDU_MRCP_SAVE_AUDIO:-1}#" "${BAIDU_MRCP_DIR}/conf/mrcp-asr.conf" || true
+        sed -i "s#^NEED_SAVE_AUDIO\s*:.*#NEED_SAVE_AUDIO : ${BAIDU_MRCP_SAVE_AUDIO:-1}#" "${BAIDU_MRCP_DIR}/conf/mrcp-proxy.conf" || true
+
+        # 5) 将 FreeSWITCH 的 mrcp_profiles/baidu.xml 指向本地 MRCP 服务
+        if [ -f "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml" ]; then
+            sed -i "s#value=\"your_server_ip\"#value=\"127.0.0.1\"#" \
+                "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml"
+            sed -i "s#<param name=\"server-port\" value=\"[0-9]\+\"/>#<param name=\"server-port\" value=\"${BAIDU_MRCP_SIP_PORT}\"/>#" \
+                "${FREESWITCH_PREFIX}/conf/mrcp_profiles/baidu.xml"
+        fi
+
+        # 6) 确保 MRCP 日志目录存在
+        mkdir -p "${BAIDU_MRCP_DIR}/logs"
+
+        # 7) 启动 MRCP Server（后台）
+        log_info "Starting Baidu MRCP Server on 127.0.0.1:${BAIDU_MRCP_SIP_PORT}..."
+        (
+          cd "${BAIDU_MRCP_DIR}" && \
+          ./bin/unimrcpserver -r . > /var/log/unimrcpserver.out 2>&1 &
+        ) || log_warn "Failed to start unimrcpserver in background."
+
+        # 8) 简单健康检查与日志提示
+        sleep 1
+        if pgrep -f unimrcpserver >/dev/null 2>&1; then
+            log_info "Baidu MRCP Server started (pid: $(pgrep -f unimrcpserver | tr '\n' ' ')). Logs: ${BAIDU_MRCP_DIR}/logs"
+        else
+            log_warn "Baidu MRCP Server process not detected. Please check: ${BAIDU_MRCP_DIR}/logs and /var/log/unimrcpserver.out"
+        fi
+    else
+        log_warn "Baidu MRCP directory not found in image; skipping MRCP startup."
+    fi
 else
     log_info "Baidu MRCP Server disabled or not found; skipping."
 fi
