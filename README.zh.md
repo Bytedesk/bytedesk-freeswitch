@@ -6,6 +6,8 @@
 
 微语呼叫中心系统的 FreeSWITCH 1.10.12 Docker 镜像，基于 Ubuntu 22.04 LTS。
 
+**语言 / Language:** [中文](README.zh.md) | [English](README.md)
+
 ## 📑 目录
 
 - [功能特性](#功能特性)

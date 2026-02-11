@@ -6,6 +6,8 @@
 
 FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu 22.04 LTS.
 
+**Language:** [English](README.md) | [中文](README.zh.md)
+
 ## 📑 Table of Contents
 
 - [Features](#features)
