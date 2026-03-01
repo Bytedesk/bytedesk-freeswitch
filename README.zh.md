@@ -11,15 +11,13 @@
 ## 📑 目录
 
 - [功能特性](#功能特性)
+- [与官方镜像对比](#与官方镜像对比)
 - [安装方式](#安装方式)
 - [配置说明](#配置说明)
 - [环境变量](#环境变量)
 - [端口说明](#端口说明)
-- [安全](#安全)
-- [文档](#文档)
-- [贡献](#贡献)
-- [许可证](#许可证)
-- [支持](#支持)
+- [服务器](#服务器)
+- [开源demo--sdk](#开源demo--sdk)
 
 ## 功能特性
 
@@ -283,7 +281,7 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 ### 核心配置
 
 | 变量名 | 说明 | 默认值 | 必填 | 安全等级 |
-|--------|------|--------|------|----------|
+| ------ | ---- | ------ | ---- | -------- |
 | `FREESWITCH_ESL_PASSWORD` | ESL 管理密码 | - | ✅ 是 | 🔴 高 |
 | `FREESWITCH_DEFAULT_PASSWORD` | SIP 用户默认密码 | `1234` | ⚠️ 强烈建议 | 🔴 高 |
 | `FREESWITCH_DOMAIN` | SIP 域名或 IP 地址 | - | 否 | 🟡 中 |
@@ -293,14 +291,14 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 ### RTP 媒体配置
 
 | 变量名 | 说明 | 默认值 | 必填 |
-|--------|------|--------|------|
+| ------ | ---- | ------ | ---- |
 | `FREESWITCH_RTP_START` | RTP 起始端口 | `16384` | 否 |
 | `FREESWITCH_RTP_END` | RTP 结束端口 | `32768` | 否 |
 
 ### 数据库配置
 
 | 变量名 | 说明 | 默认值 | 必填 |
-|--------|------|--------|------|
+| ------ | ---- | ------ | ---- |
 | `FREESWITCH_DB_HOST` | 数据库主机 | - | 否 |
 | `FREESWITCH_DB_NAME` | 数据库名称 | - | 否 |
 | `FREESWITCH_DB_USER` | 数据库用户 | `root` | 否 |
@@ -341,7 +339,7 @@ docker run -d \
 ### 必需端口
 
 | 端口 | 协议 | 说明 |
-|------|------|------|
+| ---- | ---- | ---- |
 | 5060 | TCP/UDP | SIP 内部 |
 | 5080 | TCP/UDP | SIP 外部 |
 | 8021 | TCP | ESL 管理 |
@@ -351,7 +349,7 @@ docker run -d \
 ### 可选端口
 
 | 端口 | 协议 | 说明 |
-|------|------|------|
+| ---- | ---- | ---- |
 | 5061 | TCP | SIP 内部 TLS |
 | 5081 | TCP | SIP 外部 TLS |
 | 5066 | TCP | WebSocket 信令 |
@@ -363,15 +361,15 @@ docker run -d \
 
 ## 开源Demo + SDK
 
-|Project|Description|Forks|Stars|
-|---|---|---|---|
-|[iOS](https://github.com/bytedesk/bytedesk-swift)|iOS|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-swift)|![GitHub Repo stars](https://img.shields.io/github/stars/Bytedesk/bytedesk-swift)|
-|[Android](https://github.com/bytedesk/bytedesk-android)|Android|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-android)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-android)|
-|[Flutter](https://github.com/bytedesk/bytedesk-flutter)|Flutter|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-flutter)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-flutter)|
-|[UniApp](https://github.com/bytedesk/bytedesk-uniapp)|Uniapp|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-uniapp)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-uniapp)|
-|[Web](https://github.com/bytedesk/bytedesk-web)|Vue/React/Angular/Next.js/JQuery/...|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-web)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-web)|
-|[Wordpress](https://github.com/bytedesk/bytedesk-wordpress)|Wordpress|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-wordpress)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-wordpress)|
-|[Woocommerce](https://github.com/bytedesk/bytedesk-woocommerce)|woocommerce|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-woocommerce)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-woocommerce)|
+| Project | Description | Forks | Stars |
+| --- | --- | --- | --- |
+| [iOS](https://github.com/bytedesk/bytedesk-swift) | iOS | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-swift) | ![GitHub Repo stars](https://img.shields.io/github/stars/Bytedesk/bytedesk-swift) |
+| [Android](https://github.com/bytedesk/bytedesk-android) | Android | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-android) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-android) |
+| [Flutter](https://github.com/bytedesk/bytedesk-flutter) | Flutter | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-flutter) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-flutter) |
+| [UniApp](https://github.com/bytedesk/bytedesk-uniapp) | Uniapp | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-uniapp) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-uniapp) |
+| [Web](https://github.com/bytedesk/bytedesk-web) | Vue/React/Angular/Next.js/JQuery/... | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-web) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-web) |
+| [Wordpress](https://github.com/bytedesk/bytedesk-wordpress) | Wordpress | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-wordpress) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-wordpress) |
+| [Woocommerce](https://github.com/bytedesk/bytedesk-woocommerce) | woocommerce | ![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-woocommerce) | ![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-woocommerce) |
 <!-- |[Magento](https://github.com/bytedesk/bytedesk-magento)|Magento|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-magento)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-magento)|
 |[Prestashop](https://github.com/bytedesk/bytedesk-prestashop)|Prestashop|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-prestashop)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-prestashop)|
 |[Shopify](https://github.com/bytedesk/bytedesk-shopify)|Shopify|![GitHub forks](https://img.shields.io/github/forks/bytedesk/bytedesk-shopify)|![GitHub Repo stars](https://img.shields.io/github/stars/bytedesk/bytedesk-shopify)|

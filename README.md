@@ -11,15 +11,13 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 ## 📑 Table of Contents
 
 - [Features](#features)
+- [Comparison with "Official" Image](#comparison-with-official-image)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Environment Variables](#environment-variables)
 - [Ports](#ports)
-- [Security](#security)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
+- [Server](#server)
+- [Open Source Demo + SDK](#open-source-demo--sdk)
 
 ## Features
 
@@ -286,33 +284,33 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 
 ### Core Configuration
 
-| Variable | Description | Default | Required | Security Level |
-|----------|-------------|---------|----------|----------------|
-| `FREESWITCH_ESL_PASSWORD` | ESL management password | - | ✅ Yes | 🔴 High |
-| `FREESWITCH_DEFAULT_PASSWORD` | Default SIP user password | `1234` | ⚠️ Strongly Recommended | 🔴 High |
-| `FREESWITCH_DOMAIN` | SIP domain or IP address | - | No | 🟡 Medium |
-| `FREESWITCH_EXTERNAL_IP` | External IP for NAT traversal | - | No | 🟢 Low |
-| `TZ` | Timezone | `Asia/Shanghai` | No | 🟢 Low |
+|Variable|Description|Default|Required|Security Level|
+|---|---|---|---|---|
+|`FREESWITCH_ESL_PASSWORD`|ESL management password|-|✅ Yes|🔴 High|
+|`FREESWITCH_DEFAULT_PASSWORD`|Default SIP user password|`1234`|⚠️ Strongly Recommended|🔴 High|
+|`FREESWITCH_DOMAIN`|SIP domain or IP address|-|No|🟡 Medium|
+|`FREESWITCH_EXTERNAL_IP`|External IP for NAT traversal|-|No|🟢 Low|
+|`TZ`|Timezone|`Asia/Shanghai`|No|🟢 Low|
 
 ### RTP Media Configuration
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `FREESWITCH_RTP_START` | RTP start port | `16384` | No |
-| `FREESWITCH_RTP_END` | RTP end port | `32768` | No |
+|Variable|Description|Default|Required|
+|---|---|---|---|
+|`FREESWITCH_RTP_START`|RTP start port|`16384`|No|
+|`FREESWITCH_RTP_END`|RTP end port|`32768`|No|
 
 ### Database Configuration
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `FREESWITCH_DB_HOST` | Database host | - | No |
-| `FREESWITCH_DB_NAME` | Database name | - | No |
-| `FREESWITCH_DB_USER` | Database user | `root` | No |
-| `FREESWITCH_DB_PASSWORD` | Database password | - | No |
-| `FREESWITCH_DB_PORT` | Database port | `3306` | No |
-| `FREESWITCH_DB_CHARSET` | Database charset | `utf8mb4` | No |
-| `FREESWITCH_DB_SCHEME` | Core DB connection scheme | `mariadb` | No |
-| `FREESWITCH_DB_ODBC_DIALECT` | ODBC connection dialect | `mysql` | No |
+|Variable|Description|Default|Required|
+|---|---|---|---|
+|`FREESWITCH_DB_HOST`|Database host|-|No|
+|`FREESWITCH_DB_NAME`|Database name|-|No|
+|`FREESWITCH_DB_USER`|Database user|`root`|No|
+|`FREESWITCH_DB_PASSWORD`|Database password|-|No|
+|`FREESWITCH_DB_PORT`|Database port|`3306`|No|
+|`FREESWITCH_DB_CHARSET`|Database charset|`utf8mb4`|No|
+|`FREESWITCH_DB_SCHEME`|Core DB connection scheme|`mariadb`|No|
+|`FREESWITCH_DB_ODBC_DIALECT`|ODBC connection dialect|`mysql`|No|
 
 ### Configuration Examples
 
@@ -344,22 +342,22 @@ docker run -d \
 
 ### Required Ports
 
-| Port | Protocol | Description |
-|------|----------|-------------|
-| 5060 | TCP/UDP | SIP internal |
-| 5080 | TCP/UDP | SIP external |
-| 8021 | TCP | ESL management |
-| 7443 | TCP | WebRTC WSS |
-| 16384-32768 | UDP | RTP media |
+|Port|Protocol|Description|
+|---|---|---|
+|5060|TCP/UDP|SIP internal|
+|5080|TCP/UDP|SIP external|
+|8021|TCP|ESL management|
+|7443|TCP|WebRTC WSS|
+|16384-32768|UDP|RTP media|
 
 ### Optional Ports
 
-| Port | Protocol | Description |
-|------|----------|-------------|
-| 5061 | TCP | SIP internal TLS |
-| 5081 | TCP | SIP external TLS |
-| 5066 | TCP | WebSocket signaling |
-| 3478-3479 | UDP | STUN service |
+|Port|Protocol|Description|
+|---|---|---|
+|5061|TCP|SIP internal TLS|
+|5081|TCP|SIP external TLS|
+|5066|TCP|WebSocket signaling|
+|3478-3479|UDP|STUN service|
 
 ## Server
 
