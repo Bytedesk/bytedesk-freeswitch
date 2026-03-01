@@ -40,8 +40,8 @@
 
 ## 与官方镜像对比
 
-- 官方镜像：safarov/freeswitch — 仅支持 amd64 架构（查看标签 → https://hub.docker.com/r/safarov/freeswitch/tags）
-- 本镜像：bytedesk/freeswitch — 同时支持 amd64 与 arm64 多架构（查看标签 → https://hub.docker.com/r/bytedesk/freeswitch/tags）
+- 官方镜像：safarov/freeswitch — 仅支持 amd64 架构（查看标签 → <https://hub.docker.com/r/safarov/freeswitch/tags）>
+- 本镜像：bytedesk/freeswitch — 同时支持 amd64 与 arm64 多架构（查看标签 → <https://hub.docker.com/r/bytedesk/freeswitch/tags）>
 
 提示：多架构镜像可在 x86_64 服务器与 Apple Silicon（M1/M2/M3）等 ARM 设备上直接运行，无需手动切换镜像。
 
@@ -149,6 +149,7 @@ docker compose up -d
 ## 配置说明
 
 ### 自定义配置文件
+
 ### 百度 MRCP Server（内置）
 
 - 镜像在构建期下载并打包百度 MRCP Server，容器启动时自动按环境变量写入配置并后台启动。
@@ -226,16 +227,17 @@ FreeSWITCH 端默认 Profile：`conf/mrcp_profiles/baidu.xml`
 </extension>
 ```
 
-
 #### 重要：配置文件路径说明
 
 **FreeSWITCH 实际使用的配置路径**: `/usr/local/freeswitch/etc/freeswitch`
 
 容器内虽然同时存在两个配置目录：
+
 - `/usr/local/freeswitch/etc/freeswitch` - ✅ **运行时实际使用**（正确的挂载路径）
 - `/usr/local/freeswitch/conf` - ❌ 备用目录（不被FreeSWITCH进程读取）
 
 **验证方法**：
+
 ```bash
 # 在容器内验证当前使用的配置路径
 docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
@@ -270,7 +272,8 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
      bytedesk/freeswitch:latest
    ```
 
-> ⚠️ **关键提示**: 
+> ⚠️ **关键提示**:
+>
 > - 必须挂载到 `/usr/local/freeswitch/etc/freeswitch` 路径，这是FreeSWITCH运行时实际读取的配置目录
 > - 如果挂载到 `/usr/local/freeswitch/conf` 路径，FreeSWITCH将无法读取自定义配置，可能导致ESL连接失败等问题
 > - 使用 `fs_cli -x 'global_getvar conf_dir'` 命令可验证当前配置路径
@@ -310,6 +313,7 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 ### 配置示例
 
 **开发环境：**
+
 ```bash
 docker run -d \
   -e FREESWITCH_ESL_PASSWORD=dev123 \
@@ -318,6 +322,7 @@ docker run -d \
 ```
 
 **生产环境（带数据库）：**
+
 ```bash
 docker run -d \
   -e FREESWITCH_ESL_PASSWORD='MyStr0ng#ESL!Pass2024' \

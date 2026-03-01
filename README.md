@@ -40,8 +40,8 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 
 ## Comparison with "Official" Image
 
-- safarov/freeswitch — supports amd64 only (see tags → https://hub.docker.com/r/safarov/freeswitch/tags)
-- bytedesk/freeswitch — supports both amd64 and arm64 (see tags → https://hub.docker.com/r/bytedesk/freeswitch/tags)
+- safarov/freeswitch — supports amd64 only (see tags → <https://hub.docker.com/r/safarov/freeswitch/tags>)
+- bytedesk/freeswitch — supports both amd64 and arm64 (see tags → <https://hub.docker.com/r/bytedesk/freeswitch/tags>)
 
 Tip: Multi-arch images run natively on x86_64 servers and ARM devices like Apple Silicon (M1/M2/M3) without manual image switching.
 
@@ -153,6 +153,7 @@ docker compose up -d
 ## Configuration
 
 ### Custom Configuration Files
+
 ### Baidu MRCP Server (built-in)
 
 - The image downloads and bundles Baidu MRCP Server during build. On container start, it writes configs from env vars and starts the server in background.
@@ -230,16 +231,17 @@ Dialplan example:
 </extension>
 ```
 
-
 #### Important: Configuration Path Information
 
 **FreeSWITCH actual configuration path**: `/usr/local/freeswitch/etc/freeswitch`
 
 The container contains two configuration directories:
+
 - `/usr/local/freeswitch/etc/freeswitch` - ✅ **Actually used at runtime** (correct mount path)
 - `/usr/local/freeswitch/conf` - ❌ Backup directory (not read by FreeSWITCH process)
 
 **Verification method**:
+
 ```bash
 # Verify the actual configuration path in the container
 docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getvar conf_dir'
@@ -274,7 +276,8 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
      bytedesk/freeswitch:latest
    ```
 
-> ⚠️ **Critical Notice**: 
+> ⚠️ **Critical Notice**:
+>
 > - You MUST mount to `/usr/local/freeswitch/etc/freeswitch` path, this is the actual configuration directory FreeSWITCH reads at runtime
 > - If you mount to `/usr/local/freeswitch/conf` path, FreeSWITCH will not read the custom configuration, which may cause issues like ESL connection failure
 > - Use `fs_cli -x 'global_getvar conf_dir'` command to verify the current configuration path
@@ -314,6 +317,7 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 ### Configuration Examples
 
 **Development Environment:**
+
 ```bash
 docker run -d \
   -e FREESWITCH_ESL_PASSWORD=dev123 \
@@ -322,6 +326,7 @@ docker run -d \
 ```
 
 **Production with Database:**
+
 ```bash
 docker run -d \
   -e FREESWITCH_ESL_PASSWORD='MyStr0ng#ESL!Pass2024' \
