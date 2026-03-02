@@ -44,9 +44,16 @@ docker run -d \
 
 **重要**: FreeSWITCH 实际使用的配置路径是 `/usr/local/freeswitch/etc/freeswitch`，挂载自定义配置时必须使用此路径。
 
+### 🗄️ 数据库支持
+
+- 支持 MySQL/MariaDB（含 `mod_mariadb`）
+- 支持 PostgreSQL（FreeSWITCH 核心在构建时已启用 `--enable-core-pgsql-support`）
+
+如需查看完整数据库环境变量与示例，请参考主文档：[../README.md](../README.md) / [../README.zh.md](../README.zh.md)。
+
 ### �📁 目录结构
 
-```
+```bash
 docker/
 ├── README.md                  # 本文件（引导文档）
 ├── SECURITY.md               # 安全配置指南
@@ -104,7 +111,6 @@ BUILD_UNIMRCP=1 ./build.sh
 
 在 GitHub Actions 中也可通过 workflow 的 build step 添加 `--build-arg BUILD_UNIMRCP=1` 来启用。
 
-
 ### 🌐 镜像仓库
 
 - **Docker Hub**: `bytedesk/freeswitch:latest`
@@ -112,9 +118,9 @@ BUILD_UNIMRCP=1 ./build.sh
 
 ### 📞 支持
 
-- **Email**: 270580156@qq.com
-- **GitHub**: https://github.com/Bytedesk/bytedesk-freeswitch/issues
-- **文档**: https://docs.bytedesk.com/
+- **Email**: <270580156@qq.com>
+- **GitHub**: <https://github.com/Bytedesk/bytedesk-freeswitch/issues>
+- **文档**: <https://docs.bytedesk.com/>
 
 ---
 
@@ -132,36 +138,46 @@ BUILD_UNIMRCP=1 ./build.sh
 
 1) 在仓库根目录维护你的声音包：`./sounds/`（如 `en/`, `zh/`, `music/` 等结构）。
 2) 使用脚本构建（推荐）：
+
   ```bash
   cd docker
   ./build.sh
   ```
-3) 若直接使用 `docker build` 而不经过脚本，请确保 `docker/sounds/` 目录存在（本仓库已提供占位文件保证目录存在）。
+
+1) 若直接使用 `docker build` 而不经过脚本，请确保 `docker/sounds/` 目录存在（本仓库已提供占位文件保证目录存在）。
 
 可选：若你不想下载 FreeSWITCH 官方声音包以减少构建时间/体积，可在构建时传参 `--build-arg INSTALL_SOUNDS=none`，镜像仍会使用你的本地 `sounds/` 内容。
 
-## �🎙️ MRCP 支持（mod_unimrcp）
+## �🎙️ MRCP 支持（mod_unimrcp，可选构建）
 
-本镜像已内置并默认启用 `mod_unimrcp`，可作为 MRCP 客户端对接外部 MRCP Server（如百度/腾讯/讯飞等）。
+本镜像默认不编译 `mod_unimrcp`（`BUILD_UNIMRCP=0`），以保证多架构构建稳定性与构建速度。
+如需作为 MRCP 客户端对接外部 MRCP Server（如百度/腾讯/讯飞等），请在构建时启用 `BUILD_UNIMRCP=1`。
 
 ### 配置步骤
 
-1) 修改 MRCP Profile：`conf/mrcp_profiles/baidu.xml`
+1) 构建时启用 UniMRCP / mod_unimrcp
+
+```bash
+cd docker
+BUILD_UNIMRCP=1 ./build.sh
+```
+
+2) 修改 MRCP Profile：`conf/mrcp_profiles/baidu.xml`
 
 - 将 `server-ip` 改为实际 MRCP Server 的 IP，`server-port` 通常为 5060（SIP）。
 
-2) 默认加载模块与配置
+3) 模块加载与客户端配置
 
 - 自动加载：`autoload_configs/modules.conf.xml` 已包含 `<load module="mod_unimrcp"/>`
 - 客户端设置：`autoload_configs/unimrcp.conf.xml` 默认 `default-profile=baidu`
 
-3) 运行时验证
+4) 运行时验证
 
 ```bash
 docker exec -it freeswitch fs_cli -x "show modules | grep unimrcp"
 ```
 
-若输出包含 `mod_unimrcp`，说明模块加载成功。
+若输出包含 `mod_unimrcp`，说明模块加载成功；若无输出，请先确认镜像是否使用 `BUILD_UNIMRCP=1` 构建。
 
 ### 在 Dialplan 中使用示例
 

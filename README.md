@@ -25,6 +25,7 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - ✅ Based on Ubuntu 22.04 LTS
 - ✅ mod_mariadb module included
 - ✅ MySQL/MariaDB database support
+- ✅ PostgreSQL database support
 - ✅ WebRTC support via SIP.js + mod_sofia
 - ✅ Video call support (VP8/VP9/H264)
 - ✅ Basic audio files included (8kHz)
@@ -300,6 +301,8 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 |`FREESWITCH_RTP_END`|RTP end port|`32768`|No|
 
 ### Database Configuration
+
+The image enables FreeSWITCH core PostgreSQL support at build time (`--enable-core-pgsql-support`), so you can use PostgreSQL in addition to MySQL/MariaDB.
 
 |Variable|Description|Default|Required|
 |---|---|---|---|

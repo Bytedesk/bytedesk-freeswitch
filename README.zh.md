@@ -25,6 +25,7 @@
 - ✅ 基于 Ubuntu 22.04 LTS
 - ✅ 包含 mod_mariadb 模块
 - ✅ 支持 MySQL/MariaDB 数据库
+- ✅ 支持 PostgreSQL 数据库
 - ✅ 支持 WebRTC（通过 SIP.js + mod_sofia）
 - ✅ 支持视频通话（VP8/VP9/H264）
 - ✅ 包含基础音频文件（8kHz）
@@ -296,6 +297,8 @@ docker exec -it freeswitch-container fs_cli -p YOUR_ESL_PASSWORD -x 'global_getv
 | `FREESWITCH_RTP_END` | RTP 结束端口 | `32768` | 否 |
 
 ### 数据库配置
+
+镜像在构建时已启用 FreeSWITCH 核心 PostgreSQL 支持（`--enable-core-pgsql-support`），可在 MySQL/MariaDB 之外使用 PostgreSQL。
 
 | 变量名 | 说明 | 默认值 | 必填 |
 | ------ | ---- | ------ | ---- |
