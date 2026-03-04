@@ -37,6 +37,73 @@ get_conf_dir() {
 
 CONF_DIR="$(get_conf_dir)"
 
+resolve_core_db_module() {
+  if [ -n "${FS_CORE_DB_MODULE:-}" ]; then
+    echo "${FS_CORE_DB_MODULE}"
+    return
+  fi
+
+  if echo "${FS_CORE_DB_DSN:-}" | grep -Eqi '^(pgsql|postgresql|postgres)://'; then
+    echo "mod_pgsql"
+    return
+  fi
+
+  case "${FREESWITCH_DB_SCHEME:-mariadb}" in
+    pgsql|postgresql|postgres)
+      echo "mod_pgsql"
+      ;;
+    *)
+      echo "mod_mariadb"
+      ;;
+  esac
+}
+
+apply_core_db_to_conf_dir() {
+  local conf_root="$1"
+  local switch_conf="${conf_root}/autoload_configs/switch.conf.xml"
+  local pre_load_conf="${conf_root}/autoload_configs/pre_load_modules.conf.xml"
+  local modules_conf="${conf_root}/autoload_configs/modules.conf.xml"
+
+  if [ -n "${CORE_DSN:-}" ] && [ -f "${switch_conf}" ]; then
+    CORE_DSN="${CORE_DSN}" SWITCH_CONF="${switch_conf}" python3 - <<'PY'
+import os
+import re
+from pathlib import Path
+
+target = Path(os.environ["SWITCH_CONF"])
+core_dsn = os.environ["CORE_DSN"]
+content = target.read_text(encoding="utf-8")
+content, _ = re.subn(
+    r'(<param name="core-db-dsn" value=")(?:[^"\\n]*)("\s*/?>)',
+    lambda m: f'{m.group(1)}{core_dsn}{m.group(2)}',
+    content,
+    count=1,
+)
+target.write_text(content, encoding="utf-8")
+PY
+  fi
+
+  if [ -f "${pre_load_conf}" ]; then
+    sed -E -i "s#<load module=\"[^\"]+\" */>#<load module=\"${CORE_DB_MODULE}\"/>#" "${pre_load_conf}"
+  fi
+
+  if [ -f "${modules_conf}" ]; then
+    CORE_DB_MODULE="${CORE_DB_MODULE}" MODULES_CONF="${modules_conf}" python3 - <<'PY'
+import os
+import re
+from pathlib import Path
+
+target = Path(os.environ["MODULES_CONF"])
+module = os.environ["CORE_DB_MODULE"]
+content = target.read_text(encoding="utf-8")
+content = re.sub(r'^\s*<load module="mod_mariadb"\s*/>\s*\n?', '', content, flags=re.M)
+content = re.sub(r'^\s*<load module="mod_pgsql"\s*/>\s*\n?', '', content, flags=re.M)
+content = content.replace('<load module="mod_db" />', f'<load module="mod_db" />\n    <load module="{module}" />')
+target.write_text(content, encoding="utf-8")
+PY
+  fi
+}
+
 # ============================================
 # 修复 IPv6 相关问题（可通过 DISABLE_IPV6=false 关闭）
 # ============================================
@@ -185,51 +252,28 @@ fi
 if [ -n "${FS_CORE_DB_DSN:-}" ]; then
   log_info "Configuring core-db-dsn from FS_CORE_DB_DSN..."
   CORE_DSN="${FS_CORE_DB_DSN}"
-  export CORE_DSN CONF_DIR
-  python3 - <<'PY'
-import os
-import re
-from pathlib import Path
-
-conf_dir = os.environ.get("CONF_DIR", "/usr/local/freeswitch/conf")
-core_dsn = os.environ.get("CORE_DSN", "")
-target = Path(conf_dir) / "autoload_configs" / "switch.conf.xml"
-if target.exists() and core_dsn:
-    content = target.read_text(encoding="utf-8")
-    content, _ = re.subn(
-        r'(<param name="core-db-dsn" value=")(?:[^"\\n]*)("\s*/?>)',
-        lambda m: f'{m.group(1)}{core_dsn}{m.group(2)}',
-        content,
-        count=1,
-    )
-    target.write_text(content, encoding="utf-8")
-PY
 elif [ -n "${FREESWITCH_DB_HOST:-}" ] && [ -n "${FREESWITCH_DB_NAME:-}" ]; then
   log_info "Configuring database connection from FREESWITCH_DB_*..."
   DB_USER=${FREESWITCH_DB_USER:-root}
   DB_PASSWORD=${FREESWITCH_DB_PASSWORD:-}
   DB_PORT=${FREESWITCH_DB_PORT:-3306}
   DB_SCHEME=${FREESWITCH_DB_SCHEME:-mariadb}
-  CORE_DSN="${DB_SCHEME}://Server=${FREESWITCH_DB_HOST};Port=${DB_PORT};Database=${FREESWITCH_DB_NAME};Uid=${DB_USER};Pwd=${DB_PASSWORD};"
-  export CORE_DSN CONF_DIR
-  python3 - <<'PY'
-import os
-import re
-from pathlib import Path
+  if [ "${DB_SCHEME}" = "pgsql" ] || [ "${DB_SCHEME}" = "postgresql" ] || [ "${DB_SCHEME}" = "postgres" ]; then
+    CORE_DSN="pgsql://host=${FREESWITCH_DB_HOST} dbname=${FREESWITCH_DB_NAME} user=${DB_USER} password=${DB_PASSWORD} options='-c client_min_messages=NOTICE'"
+  else
+    CORE_DSN="${DB_SCHEME}://Server=${FREESWITCH_DB_HOST};Port=${DB_PORT};Database=${FREESWITCH_DB_NAME};Uid=${DB_USER};Pwd=${DB_PASSWORD};"
+  fi
+fi
 
-conf_dir = os.environ.get("CONF_DIR", "/usr/local/freeswitch/conf")
-core_dsn = os.environ.get("CORE_DSN", "")
-target = Path(conf_dir) / "autoload_configs" / "switch.conf.xml"
-if target.exists() and core_dsn:
-    content = target.read_text(encoding="utf-8")
-    content, _ = re.subn(
-        r'(<param name="core-db-dsn" value=")(?:[^"\\n]*)("\s*/?>)',
-        lambda m: f'{m.group(1)}{core_dsn}{m.group(2)}',
-        content,
-        count=1,
-    )
-    target.write_text(content, encoding="utf-8")
-PY
+if [ -n "${CORE_DSN:-}" ]; then
+  CORE_DB_MODULE="$(resolve_core_db_module)"
+  log_info "Resolved DB module: ${CORE_DB_MODULE}"
+
+  for CANDIDATE_CONF_DIR in "${FREESWITCH_PREFIX}" "${FREESWITCH_PREFIX}/conf" "${FREESWITCH_PREFIX}/etc/freeswitch"; do
+    if [ -d "${CANDIDATE_CONF_DIR}/autoload_configs" ]; then
+      apply_core_db_to_conf_dir "${CANDIDATE_CONF_DIR}"
+    fi
+  done
 fi
 
 if [ -n "${TZ:-}" ]; then

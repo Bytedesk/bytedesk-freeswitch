@@ -18,6 +18,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 # WARNING: Change this in production environment for security!
 ENV FREESWITCH_DEFAULT_PASSWORD=1234
 ENV DISABLE_IPV6=true
+ENV FS_CORE_DB_MODULE=""
 ENV FS_CORE_DB_DSN=""
 
 # Baidu MRCP server envs (can be overridden at runtime via Compose)
