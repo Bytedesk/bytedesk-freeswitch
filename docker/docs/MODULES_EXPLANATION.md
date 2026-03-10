@@ -9,7 +9,8 @@
 **不存在名为 `mod_odbc` 的模块！**
 
 查看官方源码：
-- 官方 modules.conf.in: https://github.com/signalwire/freeswitch/blob/v1.10.12/build/modules.conf.in
+
+- 官方 modules.conf.in: <https://github.com/signalwire/freeswitch/blob/v1.10.12/build/modules.conf.in>
 - 在整个文件中搜索 "mod_odbc" → **找不到任何结果**
 
 ## FreeSWITCH 的 ODBC 支持架构
@@ -25,11 +26,13 @@
 ```
 
 **功能：**
+
 - 允许 FreeSWITCH 核心使用 ODBC 连接
 - 用于核心数据库（core-db）
 - 配置在 `autoload_configs/switch.conf.xml`
 
 **配置示例：**
+
 ```xml
 <param name="core-db-dsn" value="mariadb://Server=localhost;Port=3306;Database=freeswitch;Uid=root;Pwd=password;" />
 ```
@@ -55,6 +58,7 @@ FreeSWITCH v1.10.12 中实际存在的数据库模块：
 这是 **`mod_xml_odbc`**（不是 `mod_odbc`），用于从数据库读取 XML 配置。
 
 **特点：**
+
 - 位于 contrib 目录（贡献模块）
 - 标记为实验性
 - 默认不构建
@@ -65,22 +69,26 @@ FreeSWITCH v1.10.12 中实际存在的数据库模块：
 ### ✅ 已启用的数据库支持
 
 #### 1. 核心 ODBC 支持
+
 ```dockerfile
 --enable-core-odbc-support
 ```
 
 #### 2. 系统依赖
+
 ```dockerfile
 apt-get install -y unixodbc-dev odbc-mariadb
 ```
 
 #### 3. mod_mariadb 模块
+
 ```dockerfile
 sed -i 's/^#\(databases\/mod_mariadb\)/\1/' build/modules.conf.in
 make mod_mariadb && make mod_mariadb-install
 ```
 
 #### 4. mod_xml_curl 模块（新增）
+
 ```dockerfile
 sed -i 's/^#\(xml_int\/mod_xml_curl\)/\1/' build/modules.conf.in
 ```
@@ -120,6 +128,7 @@ docker run -d \
 ### 方式二：mod_mariadb API（在脚本中）
 
 #### Lua 示例
+
 ```lua
 -- 连接数据库
 local dbh = freeswitch.Dbh("mariadb", 
@@ -141,6 +150,7 @@ end
 ```
 
 #### 拨号计划示例
+
 ```xml
 <extension name="database_lookup">
   <condition field="destination_number" expression="^(\d+)$">
@@ -152,6 +162,7 @@ end
 ### 方式三：mod_xml_curl（动态配置）
 
 #### 配置 mod_xml_curl
+
 ```xml
 <!-- autoload_configs/xml_curl.conf.xml -->
 <configuration name="xml_curl.conf" description="cURL XML Gateway">
@@ -207,21 +218,28 @@ Lua> print(dbh:connected())
 ## 常见问题
 
 ### Q1: 为什么找不到 mod_odbc？
+
 **A:** 因为这个模块根本不存在。FreeSWITCH 的 ODBC 支持是内置在核心中的，通过 `--enable-core-odbc-support` 启用。
 
 ### Q2: 我应该使用哪个模块连接 MySQL？
+
 **A:** 推荐使用 **mod_mariadb**，它是原生的 MySQL/MariaDB 驱动，性能更好，不依赖 ODBC。
 
 ### Q3: core-db-dsn 和 mod_mariadb 有什么区别？
-**A:** 
+
+**A:**
+
 - `core-db-dsn`: 用于 FreeSWITCH 核心数据库（内部状态、注册信息等）
 - `mod_mariadb`: 提供 API 供拨号计划和脚本使用，用于自定义数据库操作
 
 ### Q4: 如何启用 mod_xml_odbc？
+
 **A:** 这是一个实验性模块，不推荐使用。推荐使用 **mod_xml_curl**（已启用）来实现动态配置，更灵活、稳定。
 
 ### Q5: 打包后缺少 mod_odbc 模块怎么办？
+
 **A:** 这是一个误解。检查以下内容：
+
 1. ✅ 核心 ODBC 支持已启用（`--enable-core-odbc-support`）
 2. ✅ mod_mariadb 已编译安装
 3. ✅ ODBC 驱动已安装（unixodbc-dev, odbc-mariadb）
@@ -238,12 +256,14 @@ Lua> print(dbh:connected())
 ## 总结
 
 ✅ **正确的理解：**
+
 - FreeSWITCH 通过 `--enable-core-odbc-support` 内置 ODBC 支持
 - 使用 `mod_mariadb` 进行 MySQL/MariaDB 操作
 - 使用 `mod_xml_curl` 实现动态配置
 - 不存在 `mod_odbc` 模块
 
 ❌ **错误的理解：**
+
 - ~~需要编译 `mod_odbc` 模块~~
 - ~~在 modules.conf.xml 中加载 `mod_odbc`~~
 - ~~缺少 `mod_odbc` 是打包问题~~

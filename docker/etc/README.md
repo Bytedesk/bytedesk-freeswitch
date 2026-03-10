@@ -5,18 +5,20 @@
 ## 文件说明
 
 ### odbc.ini
+
 - **用途**: ODBC 数据源名称 (DSN) 配置
 - **目标位置**: `/etc/odbc.ini`
 - **说明**: 定义了 FreeSWITCH 使用的 ODBC 数据源连接信息
 
 ### odbcinst.ini
+
 - **用途**: ODBC 驱动程序配置
 - **目标位置**: `/etc/odbcinst.ini`
 - **说明**: 定义了 MySQL 和 PostgreSQL 的 ODBC 驱动程序位置和设置
 
 ## 与其他配置的关系
 
-```
+```bash
 docker/
 ├── etc/                           # 系统级 ODBC 配置（本文件夹）
 │   ├── odbc.ini                  # → /etc/odbc.ini
@@ -61,4 +63,5 @@ docker/
 4. **连接选项**: `Option = 16777216` 启用 MySQL 自动重连
 
 ## 更新日期
+
 2025-10-10

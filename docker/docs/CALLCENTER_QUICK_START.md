@@ -3,6 +3,7 @@
 ## 已启用的模块列表
 
 ### ✅ 用户请求的模块
+
 - ✅ mod_fail2ban - 安全防护，防暴力破解
 - ✅ mod_callcenter - 呼叫中心核心功能
 - ✅ mod_blacklist - 黑名单管理
@@ -13,6 +14,7 @@
 - ✅ mod_redis - Redis 限流功能
 
 ### 💡 额外推荐的呼叫中心模块
+
 - ✅ mod_distributor - 负载均衡和呼叫分配
 - ✅ mod_lcr - 最低成本路由（智能路由选择）
 - ✅ mod_cidlookup - 来电显示查询（号码归属地）
@@ -21,12 +23,14 @@
 - ✅ **mod_spy** - **监听/耳语/强插（质检必备）⭐**
 
 ### ⭐ 强烈推荐模块（2025-10-10 新增）
+
 - ✅ **mod_avmd** - **答录机检测（外呼必备）⭐⭐⭐⭐⭐**
 - ✅ **mod_directory** - **企业通讯录（座席效率）⭐⭐⭐⭐**
 - ✅ **mod_json_cdr** - **JSON 格式 CDR（现代化）⭐⭐⭐⭐**
 - ✅ **mod_voicemail_ivr** - **增强语音邮箱（完整功能）⭐⭐⭐⭐**
 
 ### 📦 已有的基础模块
+
 - ✅ mod_fifo - FIFO 队列（轻量级队列）
 - ✅ mod_conference - 会议功能
 - ✅ mod_voicemail - 语音邮箱
@@ -66,6 +70,7 @@
 ## 常用 API 命令
 
 ### mod_callcenter
+
 ```bash
 # 座席管理
 callcenter_config agent set status 1001@default 'Available'
@@ -79,6 +84,7 @@ callcenter_config tier add 1001@default support@default 1 1
 ```
 
 ### mod_fail2ban
+
 ```bash
 # 查看封禁列表
 fail2ban list
@@ -89,6 +95,7 @@ fail2ban unban 192.168.1.100
 ```
 
 ### mod_blacklist
+
 ```bash
 # 黑名单管理
 blacklist add 13800138000
@@ -97,6 +104,7 @@ blacklist check 13800138000
 ```
 
 ### mod_hiredis
+
 ```bash
 # Redis 命令
 hiredis_raw default SET key value
@@ -107,6 +115,7 @@ hiredis_raw default DEL key
 ## 拨号计划示例
 
 ### 呼叫中心队列
+
 ```xml
 <extension name="queue">
   <condition field="destination_number" expression="^6000$">
@@ -117,6 +126,7 @@ hiredis_raw default DEL key
 ```
 
 ### 黑名单检查
+
 ```xml
 <extension name="blacklist_check">
   <condition field="${blacklist(check ${caller_id_number})}" expression="^true$">
@@ -126,6 +136,7 @@ hiredis_raw default DEL key
 ```
 
 ### 负载均衡
+
 ```xml
 <extension name="load_balance">
   <condition field="destination_number" expression="^9(\d+)$">
@@ -136,6 +147,7 @@ hiredis_raw default DEL key
 ```
 
 ### LCR 路由
+
 ```xml
 <extension name="lcr">
   <condition field="destination_number" expression="^9(\d+)$">
@@ -146,6 +158,7 @@ hiredis_raw default DEL key
 ```
 
 ### 实时计费
+
 ```xml
 <extension name="billing">
   <condition field="destination_number" expression="^9(\d+)$">
@@ -157,6 +170,7 @@ hiredis_raw default DEL key
 ```
 
 ### API 集成
+
 ```xml
 <extension name="api_verify">
   <condition field="destination_number" expression="^8(\d+)$">
@@ -184,6 +198,7 @@ hiredis_raw default DEL key
 ## 系统要求
 
 ### 必需的系统包
+
 ```bash
 # 已在 Dockerfile 中安装
 - python3, python3-dev, python3-distutils  # Python3 支持
@@ -202,6 +217,7 @@ docker build -t bytedesk/freeswitch:callcenter .
 ## 启动容器
 
 ### 基础启动
+
 ```bash
 docker run -d \
   --name freeswitch \
@@ -213,6 +229,7 @@ docker run -d \
 ```
 
 ### 带数据库配置
+
 ```bash
 docker run -d \
   --name freeswitch \
@@ -230,6 +247,7 @@ docker run -d \
 ```
 
 ### Docker Compose
+
 ```yaml
 version: '3'
 services:
@@ -295,16 +313,19 @@ show modules | grep nibblebill
 ## 监控和诊断
 
 ### 实时日志
+
 ```bash
 docker logs -f freeswitch
 ```
 
 ### 进入 fs_cli
+
 ```bash
 docker exec -it freeswitch fs_cli
 ```
 
 ### 检查系统状态
+
 ```bash
 fs_cli -x "status"
 fs_cli -x "show channels"
@@ -314,16 +335,19 @@ fs_cli -x "callcenter_config queue list"
 ## 性能建议
 
 ### 小型系统（<20座席）
+
 - CPU: 2 核
 - 内存: 2GB
 - 并发: 50 路
 
 ### 中型系统（20-100座席）
+
 - CPU: 4-8 核
 - 内存: 4-8GB
 - 并发: 200 路
 
 ### 大型系统（>100座席）
+
 - CPU: 8-16 核
 - 内存: 16-32GB
 - 并发: 500+ 路
@@ -332,6 +356,7 @@ fs_cli -x "callcenter_config queue list"
 ## 故障排查
 
 ### 模块加载失败
+
 ```bash
 # 查看错误日志
 docker exec freeswitch tail -f /usr/local/freeswitch/log/freeswitch.log
@@ -341,6 +366,7 @@ docker exec freeswitch ls -la /usr/local/freeswitch/mod/ | grep -E "callcenter|f
 ```
 
 ### 数据库连接失败
+
 ```bash
 # 测试数据库连接
 docker exec freeswitch fs_cli -x "lua"
@@ -350,6 +376,7 @@ print(dbh:connected())
 ```
 
 ### Redis 连接失败
+
 ```bash
 # 测试 Redis
 docker exec redis redis-cli ping

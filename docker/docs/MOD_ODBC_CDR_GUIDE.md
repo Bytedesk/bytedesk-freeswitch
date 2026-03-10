@@ -43,6 +43,7 @@ docker run -d \
 ```
 
 容器启动时，`docker-entrypoint.sh` 会自动配置：
+
 - `autoload_configs/odbc.conf.xml` - ODBC 数据源配置
 - `autoload_configs/db.conf.xml` - 数据库连接配置
 - `autoload_configs/switch.conf.xml` - 核心数据库配置
