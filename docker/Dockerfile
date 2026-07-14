@@ -270,7 +270,7 @@ RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
     git clone --depth 1 https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
-    ./configure && \
+    ./configure --with-apr=/usr --with-apr-util=/usr && \
     make -j"$(nproc)" && make install && \
     ldconfig && \
     cd /root && rm -rf unimrcp && \
