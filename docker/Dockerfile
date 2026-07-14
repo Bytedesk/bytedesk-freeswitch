@@ -259,30 +259,14 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
 RUN ldconfig
 
 # UniMRCP 构建选项（默认禁用，启用需传 --build-arg BUILD_UNIMRCP=1）
-# 按照官方文档编译：先构建 APR/APR-Util 依赖，再构建 UniMRCP 和 mod_unimrcp
+# 使用系统 APR/APR-Util（由 apt libapr1-dev/libaprutil1-dev 提供），
+# 不再从 unimrcp-deps 构建旧版 APR，避免 apr_pool_mutex_set 未定义。
 ARG BUILD_UNIMRCP=0
 RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
-    echo "Building UniMRCP and mod_unimrcp for MRCP support (following official guide)..."; \
+    echo "Building UniMRCP and mod_unimrcp for MRCP support..."; \
     cd /root && \
-    # 步骤1：下载并编译 UniMRCP 依赖包（APR、APR-Util）
-    echo "Step 1: Building UniMRCP dependencies (APR, APR-Util)..." && \
-    wget -q https://www.unimrcp.org/project/component-view/unimrcp-deps-1-6-0-tar-gz/download -O unimrcp-deps-1.6.0.tar.gz && \
-    tar xzf unimrcp-deps-1.6.0.tar.gz && \
-    cd unimrcp-deps-1.6.0 && \
-    # 编译 APR
-    cd libs/apr && \
-    ./configure --prefix=/usr/local/apr && \
-    make -j"$(nproc)" && make install && \
-    cd .. && \
-    # 编译 APR-Util
-    cd apr-util && \
-    ./configure --prefix=/usr/local/apr --with-apr=/usr/local/apr && \
-    make -j"$(nproc)" && make install && \
-    cd ../.. && \
-    ldconfig && \
-    cd /root && rm -rf unimrcp-deps-1.6.0 unimrcp-deps-1.6.0.tar.gz && \
-    # 步骤2：编译 UniMRCP
-    echo "Step 2: Building UniMRCP..." && \
+    # 步骤1：编译 UniMRCP
+    echo "Step 1: Building UniMRCP (using system APR)..." && \
     git clone --depth 1 https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
     ./bootstrap && \
@@ -290,8 +274,8 @@ RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
     make -j"$(nproc)" && make install && \
     ldconfig && \
     cd /root && rm -rf unimrcp && \
-    # 步骤3：编译并安装 mod_unimrcp
-    echo "Step 3: Building mod_unimrcp..." && \
+    # 步骤2：编译并安装 mod_unimrcp
+    echo "Step 2: Building mod_unimrcp..." && \
     git clone --depth 1 https://github.com/freeswitch/mod_unimrcp.git && \
     cd mod_unimrcp && \
     export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:/usr/local/unimrcp/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
