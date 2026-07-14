@@ -88,7 +88,7 @@ RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
                 -DBUILD_STATIC_LIBS=OFF && \
             cmake --build build -- -j"$(nproc)" && \
             cmake --install build && \
-            ldconfig && cd .. && rm -rf libks; \
+            if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && cd .. && rm -rf libks; \
         else \
             echo "Skipping libks (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
         fi
@@ -110,7 +110,7 @@ RUN if [ "${BUILD_SIGNALWIRE}" = "1" ]; then \
                         -DOPENSSL_SSL_LIBRARY=/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libssl.so && \
             cmake --build build -- -j"$(nproc)" && \
             cmake --install build && \
-            ldconfig && \
+            if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
             cd .. && rm -rf signalwire-c; \
         else \
             echo "Skipping signalwire-c build (BUILD_SIGNALWIRE=${BUILD_SIGNALWIRE})"; \
@@ -122,7 +122,7 @@ RUN git clone https://github.com/freeswitch/sofia-sip.git && \
     ./bootstrap.sh && \
     ./configure && \
     make && make install && \
-    ldconfig && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
     cd .. && rm -rf sofia-sip
 
 # 编译安装 spandsp (指定版本)
@@ -132,7 +132,7 @@ RUN git clone https://github.com/freeswitch/spandsp && \
     ./bootstrap.sh && \
     ./configure --prefix=/usr/local && \
     make && make install && \
-    ldconfig && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
     cd .. && rm -rf spandsp
 
 # 使用系统提供的 Lua 5.3（通过 apt 安装），无需从源码编译
@@ -156,7 +156,7 @@ RUN git clone --depth 1 -b release/4.4 https://github.com/FFmpeg/FFmpeg.git && \
                 --prefix=/usr/local && \
     make -j"$(nproc)" && \
     make install && \
-    ldconfig && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
     cd .. && rm -rf FFmpeg
 
 # 注意：不要从源码安装旧版 libuuid（会与系统版冲突，导致 APR 链接到错误的符号）
