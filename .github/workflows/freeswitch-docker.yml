@@ -137,6 +137,7 @@ jobs:
             BUILD_SIGNALWIRE=0
             INSTALL_SOUNDS=basic
             ENABLE_VIDEO=1
+            BUILD_UNIMRCP=1
 
       # 9. 构建并推送到 Docker Hub
       - name: Build and push to Docker Hub
@@ -162,6 +163,7 @@ jobs:
             BUILD_SIGNALWIRE=0
             INSTALL_SOUNDS=basic
             ENABLE_VIDEO=1
+            BUILD_UNIMRCP=1
 
       # 10. 创建 GitHub Release（仅在推送标签时）
       - name: Create GitHub Release
