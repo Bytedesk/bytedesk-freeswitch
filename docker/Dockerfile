@@ -12,8 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FREESWITCH_VERSION=v1.10.12
 ENV FREESWITCH_PREFIX=/usr/local/freeswitch
 ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
-# Initialize LD_LIBRARY_PATH safely (avoid undefined var warning under BuildKit)
-ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
+ENV LD_LIBRARY_PATH=/usr/local/lib
 # Default password for SIP users (can be overridden via FREESWITCH_DEFAULT_PASSWORD env var)
 # WARNING: Change this in production environment for security!
 ENV FREESWITCH_DEFAULT_PASSWORD=1234
@@ -259,16 +258,19 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
 RUN ldconfig
 
 # UniMRCP 构建选项（默认禁用，启用需传 --build-arg BUILD_UNIMRCP=1）
-# 使用系统 APR/APR-Util（由 apt libapr1-dev/libaprutil1-dev 提供），
-# 不再从 unimrcp-deps 构建旧版 APR，避免 apr_pool_mutex_set 未定义。
+# 使用系统 APR/APR-Util（由 apt libapr1-dev/libaprutil1-dev 提供）。
+# UniMRCP 1.8.0 的 apr-toolkit 会引用 Ubuntu 22.04 libapr1 没有导出的
+# apr_pool_mutex_set，因此构建前移除该可选调用，避免链接失败。
 ARG BUILD_UNIMRCP=0
+ARG UNIMRCP_VERSION=unimrcp-1.8.0
 RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
     echo "Building UniMRCP and mod_unimrcp for MRCP support..."; \
     cd /root && \
     # 步骤1：编译 UniMRCP
     echo "Step 1: Building UniMRCP (using system APR)..." && \
-    git clone --depth 1 https://github.com/unispeech/unimrcp.git && \
+    git clone --depth 1 -b ${UNIMRCP_VERSION} https://github.com/unispeech/unimrcp.git && \
     cd unimrcp && \
+    sed -i '/apr_pool_mutex_set(pool,mutex);/d' libs/apr-toolkit/src/apt_pool.c && \
     ./bootstrap && \
     ./configure --with-apr=/usr --with-apr-util=/usr && \
     make -j"$(nproc)" && make install && \
