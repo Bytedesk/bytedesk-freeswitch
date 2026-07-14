@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FREESWITCH_VERSION=v1.10.12
 ENV FREESWITCH_PREFIX=/usr/local/freeswitch
 ENV PATH=$PATH:$FREESWITCH_PREFIX/bin
-ENV LD_LIBRARY_PATH=/usr/local/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/freeswitch/lib:/usr/local/unimrcp/lib
 # Default password for SIP users (can be overridden via FREESWITCH_DEFAULT_PASSWORD env var)
 # WARNING: Change this in production environment for security!
 ENV FREESWITCH_DEFAULT_PASSWORD=1234
@@ -254,8 +254,13 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     fi && \
     cd .. && rm -rf freeswitch
 
-# 确保所有共享库都被正确链接
-RUN ldconfig
+# buildx/QEMU arm64 can segfault while scanning FreeSWITCH libraries with ldconfig.
+# Library paths are exported in LD_LIBRARY_PATH above, so skip this cache refresh on arm64.
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+        echo "Skipping ldconfig under arm64 buildx/QEMU"; \
+    else \
+        ldconfig; \
+    fi
 
 # UniMRCP 构建选项（默认禁用，启用需传 --build-arg BUILD_UNIMRCP=1）
 # 使用系统 APR/APR-Util（由 apt libapr1-dev/libaprutil1-dev 提供）。
@@ -274,7 +279,7 @@ RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
     ./bootstrap && \
     ./configure --with-apr=/usr --with-apr-util=/usr && \
     make -j"$(nproc)" && make install && \
-    ldconfig && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
     cd /root && rm -rf unimrcp && \
     # 步骤2：编译并安装 mod_unimrcp
     echo "Step 2: Building mod_unimrcp..." && \
@@ -284,7 +289,7 @@ RUN if [ "${BUILD_UNIMRCP}" = "1" ]; then \
     ./bootstrap.sh && \
     ./configure && \
     make -j"$(nproc)" && make install && \
-    ldconfig && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
     cd /root && rm -rf mod_unimrcp && \
     echo "UniMRCP and mod_unimrcp build completed successfully."; \
     else \

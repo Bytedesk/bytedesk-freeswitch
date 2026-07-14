@@ -95,52 +95,8 @@ jobs:
           password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
           logout: false
 
-      # 7. 准备构建元数据
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.IMAGE_NAME }}
-            ${{ env.ALIYUN_IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ steps.version.outputs.VERSION }}
-            type=raw,value=latest
-          labels: |
-            org.opencontainers.image.title=ByteDesk FreeSWITCH
-            org.opencontainers.image.description=FreeSWITCH Docker image for ByteDesk Call Center
-            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
-            org.opencontainers.image.vendor=ByteDesk
-            maintainer=ByteDesk <270580156@qq.com>
-
-      # 8. 构建并推送到阿里云 Docker Registry
-      - name: Build and push to Aliyun Docker Registry
-        uses: docker/build-push-action@v6
-        with:
-          context: ./docker
-          file: ./docker/Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event.inputs.push_to_registry != 'false' }}
-          tags: |
-            ${{ env.ALIYUN_IMAGE_NAME }}:latest
-            ${{ env.ALIYUN_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          provenance: false
-          build-args: |
-            FREESWITCH_VERSION=${{ env.FREESWITCH_VERSION }}
-            BUILD_DATE=${{ steps.meta.outputs.created }}
-            VCS_REF=${{ github.sha }}
-            VERSION=${{ steps.version.outputs.VERSION }}
-            BUILD_SIGNALWIRE=0
-            INSTALL_SOUNDS=basic
-            ENABLE_VIDEO=1
-            BUILD_UNIMRCP=1
-
-      # 9. 构建并推送到 Docker Hub
-      - name: Build and push to Docker Hub
+      # 7. 构建并推送镜像
+      - name: Build and push Docker images
         uses: docker/build-push-action@v6
         with:
           context: ./docker
@@ -151,199 +107,23 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
-          labels: ${{ steps.meta.outputs.labels }}
+            ${{ env.ALIYUN_IMAGE_NAME }}:latest
+            ${{ env.ALIYUN_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          labels: |
+            org.opencontainers.image.title=ByteDesk FreeSWITCH
+            org.opencontainers.image.description=FreeSWITCH Docker image for ByteDesk Call Center
+            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+            org.opencontainers.image.vendor=ByteDesk
+            org.opencontainers.image.revision=${{ github.sha }}
+            maintainer=ByteDesk <270580156@qq.com>
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
           build-args: |
             FREESWITCH_VERSION=${{ env.FREESWITCH_VERSION }}
-            BUILD_DATE=${{ steps.meta.outputs.created }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ steps.version.outputs.VERSION }}
             BUILD_SIGNALWIRE=0
             INSTALL_SOUNDS=basic
             ENABLE_VIDEO=1
             BUILD_UNIMRCP=1
-
-      # 10. 创建 GitHub Release（仅在推送标签时）
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/freeswitch-v')
-        uses: softprops/action-gh-release@v1
-        with:
-          name: FreeSWITCH v${{ steps.version.outputs.VERSION }}
-          body: |
-            ## FreeSWITCH Docker 镜像发布
-            
-            **版本**: ${{ steps.version.outputs.VERSION }}  
-            **FreeSWITCH 版本**: 1.10.12  
-            **基础镜像**: Ubuntu 22.04 LTS
-            
-            ### 📦 Docker 镜像
-            
-            #### Docker Hub
-            ```bash
-            docker pull bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-            # 或者
-            docker pull bytedesk/freeswitch:latest
-            ```
-            
-            #### 阿里云镜像仓库（中国大陆用户推荐）
-            ```bash
-            docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-            # 或者
-            docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:latest
-            ```
-            
-            ### 🚀 快速启动
-            
-            ```bash
-            docker run -d \
-              --name freeswitch-bytedesk \
-              -p 5060:5060/tcp -p 5060:5060/udp \
-              -p 5080:5080/tcp -p 5080:5080/udp \
-              -p 8021:8021 \
-              -p 7443:7443 \
-              -p 16384-32768:16384-32768/udp \
-              -e FREESWITCH_ESL_PASSWORD=your-password \
-              -e TZ=Asia/Shanghai \
-              bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-            ```
-            
-            ### 📋 功能特性
-            
-            - ✅ 基于 Ubuntu 22.04 LTS
-            - ✅ FreeSWITCH 1.10.12 版本
-            - ✅ 包含 mod_mariadb 模块
-            - ✅ 支持 MySQL/MariaDB 数据库
-            - ✅ 支持 WebRTC (通过 SIP.js + mod_sofia)
-            - ✅ 支持视频通话 (VP8/VP9/H264)
-            - ✅ 包含基础音频文件 (8kHz)
-            - ✅ 支持 SIP TLS 加密
-            - ✅ 健康检查配置
-            - ✅ 环境变量配置
-            - ❌ mod_verto 已禁用 (改用 SIP over WebSocket)
-            
-            ### 🔧 环境变量
-            
-            | 变量名 | 说明 | 默认值 |
-            |--------|------|--------|
-            | FREESWITCH_ESL_PASSWORD | ESL 连接密码 | - |
-            | FREESWITCH_DOMAIN | SIP 域名 | - |
-            | FREESWITCH_EXTERNAL_IP | 外部 IP (NAT) | - |
-            | TZ | 时区 | Asia/Shanghai |
-            
-            ### 📚 文档
-            
-            - [完整文档](https://github.com/${{ github.repository }}/tree/main/docker/README.md)
-            - [快速开始](https://github.com/${{ github.repository }}/tree/main/docker/QUICKSTART.md)
-            - [FreeSWITCH 官方文档](https://freeswitch.org/confluence/)
-            
-            ### 🔗 相关链接
-            
-            - Docker Hub: https://hub.docker.com/r/bytedesk/freeswitch
-            - 阿里云镜像: https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch
-            
-            ---
-            
-            **构建时间**: ${{ steps.meta.outputs.created }}  
-            **提交 SHA**: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 11. 输出构建信息
-      - name: Build Summary
-        run: |
-          echo "## 🎉 FreeSWITCH Docker 镜像构建成功" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 镜像信息" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **版本**: ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **FreeSWITCH**: 1.10.12" >> $GITHUB_STEP_SUMMARY
-          echo "- **平台**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
-          echo "- **构建时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🐳 Docker Hub" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ☁️ 阿里云镜像仓库" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔗 相关链接" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- [Docker Hub](https://hub.docker.com/r/bytedesk/freeswitch)" >> $GITHUB_STEP_SUMMARY
-          echo "- [阿里云镜像](https://cr.console.aliyun.com/repository/cn-hangzhou/bytedesk/freeswitch)" >> $GITHUB_STEP_SUMMARY
-          echo "- [使用文档](https://github.com/${{ github.repository }}/tree/main/docker)" >> $GITHUB_STEP_SUMMARY
-
-  # 可选：测试构建的镜像
-  test-image:
-    name: Test FreeSWITCH Docker Image
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.event.inputs.push_to_registry != 'false'
-    
-    steps:
-      - name: Extract version
-        id: version
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF_NAME#freeswitch-v}"
-          fi
-          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-
-      - name: Pull and test Docker image
-        run: |
-          echo "Testing Docker Hub image..."
-          docker pull bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-          
-          echo "Starting container..."
-          docker run -d --name freeswitch-test \
-            -e FREESWITCH_ESL_PASSWORD=test123 \
-            bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-          
-          echo "Waiting for container to start..."
-          sleep 30
-          
-          echo "Checking container status..."
-          docker ps -a
-          
-          echo "Checking container logs..."
-          docker logs freeswitch-test
-          
-          echo "Testing FreeSWITCH status..."
-          docker exec freeswitch-test fs_cli -p test123 -x "status" || true
-          
-          echo "Stopping test container..."
-          docker stop freeswitch-test
-          docker rm freeswitch-test
-          
-          echo "✅ Image test completed!"
-
-      - name: Test Aliyun image
-        run: |
-          echo "Testing Aliyun Docker Registry image..."
-          docker pull registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-          
-          echo "Starting container..."
-          docker run -d --name freeswitch-test-aliyun \
-            -e FREESWITCH_ESL_PASSWORD=test123 \
-            registry.cn-hangzhou.aliyuncs.com/bytedesk/freeswitch:${{ steps.version.outputs.VERSION }}
-          
-          echo "Waiting for container to start..."
-          sleep 30
-          
-          echo "Checking container status..."
-          docker ps -a
-          
-          echo "Stopping test container..."
-          docker stop freeswitch-test-aliyun
-          docker rm freeswitch-test-aliyun
-          
-          echo "✅ Aliyun image test completed!"
