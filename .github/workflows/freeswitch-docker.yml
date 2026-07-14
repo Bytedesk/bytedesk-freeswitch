@@ -6,8 +6,8 @@ name: Build FreeSWITCH Docker
 on:
   push:
     tags:
-      # 匹配 freeswitch-v 开头的标签，例如: freeswitch-v1.10.12
-      - 'freeswitch-v*'
+      # 匹配 v 开头的标签，例如: v1.10.12
+      - 'v*'
     paths:
       # 当以下路径发生变化时触发
       - 'docker/**'
@@ -58,8 +58,8 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             VERSION="${{ github.event.inputs.version }}"
           else
-            # 从标签提取版本号，例如: freeswitch-v1.10.12 -> 1.10.12
-            VERSION="${GITHUB_REF_NAME#freeswitch-v}"
+            # 从标签提取版本号，例如: v1.10.12 -> 1.10.12
+            VERSION="${GITHUB_REF_NAME#v}"
           fi
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "Building FreeSWITCH version: ${VERSION}"
