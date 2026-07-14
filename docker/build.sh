@@ -78,6 +78,7 @@ docker build \
     --build-arg BUILD_DATE="${BUILD_DATE}" \
     --build-arg VCS_REF="${VCS_REF}" \
     --build-arg VERSION="${VERSION}" \
+    --build-arg BUILD_UNIMRCP=1 \
     -t "${DOCKERHUB_IMAGE}:${VERSION}" \
     -t "${DOCKERHUB_IMAGE}:latest" \
     -t "${ALIYUN_IMAGE}:${VERSION}" \
