@@ -111,6 +111,49 @@ BUILD_UNIMRCP=1 ./build.sh
 
 在 GitHub Actions 中也可通过 workflow 的 build step 添加 `--build-arg BUILD_UNIMRCP=1` 来启用。
 
+### WebSocket 音频流支持：mod_audio_stream
+
+镜像现在默认编译并加载 `mod_audio_stream`，用于将 FreeSWITCH 实时音频通过 WebSocket 发送到外部 ASR、Agent、TTS 或其他流式处理服务。
+
+默认策略：
+
+- `docker/Dockerfile` 中的 `MOD_AUDIO_STREAM_REF` 默认值为 `main`
+- GitHub Actions 手动构建时也暴露了 `mod_audio_stream_ref` 输入参数
+- 该参数支持 `branch`、`tag` 或 `commit SHA`
+
+如果你更关注可复现构建，建议不要长期跟随 `main`，而是固定为明确版本标签或提交号。
+
+本地构建示例：
+
+```bash
+cd docker
+docker build \
+  --build-arg MOD_AUDIO_STREAM_REF=v1.0.0 \
+  -t bytedesk/freeswitch:mod-audio-stream .
+```
+
+固定到具体提交示例：
+
+```bash
+cd docker
+docker build \
+  --build-arg MOD_AUDIO_STREAM_REF=ec2a781 \
+  -t bytedesk/freeswitch:mod-audio-stream .
+```
+
+GitHub Actions 手动触发建议：
+
+- 日常跟踪上游：保留默认值 `main`
+- 预发布/生产构建：填写已验证的 tag 或 commit SHA
+
+构建完成后可在容器内验证模块是否已安装并加载：
+
+```bash
+docker exec -it freeswitch fs_cli -x "show modules like audio_stream"
+```
+
+若返回包含 `mod_audio_stream`，说明模块已成功安装。
+
 ### 🌐 镜像仓库
 
 - **Docker Hub**: `bytedesk/freeswitch:latest`
@@ -162,16 +205,16 @@ cd docker
 BUILD_UNIMRCP=1 ./build.sh
 ```
 
-2) 修改 MRCP Profile：`conf/mrcp_profiles/baidu.xml`
+1. 修改 MRCP Profile：`conf/mrcp_profiles/baidu.xml`
 
 - 将 `server-ip` 改为实际 MRCP Server 的 IP，`server-port` 通常为 5060（SIP）。
 
-3) 模块加载与客户端配置
+1. 模块加载与客户端配置
 
 - 自动加载：`autoload_configs/modules.conf.xml` 已包含 `<load module="mod_unimrcp"/>`
 - 客户端设置：`autoload_configs/unimrcp.conf.xml` 默认 `default-profile=baidu`
 
-4) 运行时验证
+1. 运行时验证
 
 ```bash
 docker exec -it freeswitch fs_cli -x "show modules | grep unimrcp"

@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
+  mod_audio_stream dialplan reference (commented-out template):
+
+  <extension name="audio_stream_demo">
+    <condition field="destination_number" expression="^9002$">
+      <action application="answer"/>
+      <action application="sleep" data="500"/>
+
+      mix-type: mono | mixed | stereo
+      sampling-rate: 8k | 16k
+      metadata (optional): UTF-8 text sent before audio starts
+
+      <action application="set"
+              data="stream_result=${expand(api uuid_audio_stream ${uuid} start ws://your-server:8080/stream mixed 8k hello_from_freeswitch)}"/>
+      <action application="log" data="INFO audio_stream started: ${stream_result}"/>
+    </condition>
+  </extension>
+
+  fs_cli quick-test:
+    fs_cli -x "uuid_audio_stream <uuid> start ws://your-server:8080/stream mixed 8k"
+    fs_cli -x "uuid_audio_stream <uuid> send_text a message"
+    fs_cli -x "uuid_audio_stream <uuid> stop"
+-->
+<!--
     NOTICE:
 
     This context is usually accessed via authenticated callers on the sip profile on port 5060

@@ -27,6 +27,7 @@
 - ✅ 支持 MySQL/MariaDB 数据库
 - ✅ 支持 PostgreSQL 数据库
 - ✅ 支持 WebRTC（通过 SIP.js + mod_sofia）
+- ✅ 默认支持 mod_audio_stream WebSocket 音频流
 - ✅ 支持视频通话（VP8/VP9/H264）
 - ✅ 包含基础音频文件（8kHz）
 - ✅ 支持 SIP TLS 加密
@@ -224,6 +225,71 @@ FreeSWITCH 端默认 Profile：`conf/mrcp_profiles/baidu.xml`
     <action application="log" data="INFO 识别结果: ${detect_speech_result}"/>
   </condition>
 </extension>
+```
+
+### WebSocket 音频流（mod_audio_stream）
+
+- 镜像现在默认编译并加载 `mod_audio_stream`。
+- 该模块用于在 FreeSWITCH 与外部 WebSocket 服务之间传输实时音频，典型场景包括 ASR、AI Agent、TTS 流水线和自定义媒体处理服务。
+- Docker 构建通过 `MOD_AUDIO_STREAM_REF` 选择上游 git 引用，默认值为 `main`。
+
+推荐的版本固定策略：
+
+- 开发环境或持续跟踪上游时，可保持 `MOD_AUDIO_STREAM_REF=main`
+- 预发布或生产环境，建议固定为已经验证的 tag 或 commit SHA，以保证构建可复现
+
+构建示例：
+
+```bash
+# 固定到发布标签
+docker build -f docker/Dockerfile docker \
+  --build-arg MOD_AUDIO_STREAM_REF=v1.0.0 \
+  -t bytedesk/freeswitch:mod-audio-stream
+
+# 固定到具体提交
+docker build -f docker/Dockerfile docker \
+  --build-arg MOD_AUDIO_STREAM_REF=ec2a781 \
+  -t bytedesk/freeswitch:mod-audio-stream
+```
+
+运行后可在容器内验证模块是否已安装并加载：
+
+```bash
+docker exec -it freeswitch fs_cli -x "show modules like audio_stream"
+```
+
+若输出包含 `mod_audio_stream`，说明模块已成功安装并加载。
+
+拨号计划示例（最简 — 接听后立即开始推流）：
+
+```xml
+<extension name="audio_stream_demo">
+  <condition field="destination_number" expression="^9002$">
+    <action application="answer"/>
+    <action application="sleep" data="500"/>
+    <!--
+      mix-type: mono | mixed | stereo
+      sampling-rate: 8k | 16k
+      metadata（可选）：在音频之前发送的 UTF-8 文本
+    -->
+    <action application="set"
+            data="stream_result=${expand(api uuid_audio_stream ${uuid} start ws://your-server:8080/stream mixed 8k hello_from_freeswitch)}"/>
+    <action application="log" data="INFO audio_stream 已启动: ${stream_result}"/>
+  </condition>
+</extension>
+```
+
+fs_cli / ESL 示例（启动、发送文本、停止）：
+
+```bash
+# 启动推流
+fs_cli -x "uuid_audio_stream <uuid> start ws://your-server:8080/stream mixed 8k"
+
+# 中途发送文本
+fs_cli -x "uuid_audio_stream <uuid> send_text 发送一条文本消息"
+
+# 停止
+fs_cli -x "uuid_audio_stream <uuid> stop"
 ```
 
 #### 重要：配置文件路径说明

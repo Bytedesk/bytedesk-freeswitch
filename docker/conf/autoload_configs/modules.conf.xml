@@ -106,6 +106,7 @@
     <!--<load module="mod_smpp"/>-->
     <!--<load module="mod_random"/>-->
     <load module="mod_httapi" />
+    <load module="mod_audio_stream" />
     <!--<load module="mod_translate"/>-->
 
     <!-- SNOM Module -->

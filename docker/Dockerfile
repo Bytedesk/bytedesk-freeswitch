@@ -49,6 +49,9 @@ ARG INSTALL_SOUNDS=basic
 # ENABLE_VIDEO=1 启用 VP8/VP9/H264 视频编解码支持
 ARG ENABLE_VIDEO=0
 
+# mod_audio_stream 源码版本（默认跟踪上游 main 分支）
+ARG MOD_AUDIO_STREAM_REF=main
+
 # 设置工作目录
 WORKDIR /root
 
@@ -60,6 +63,7 @@ RUN apt-get update && apt-get upgrade -y && \
     zlib1g-dev libjpeg-dev libncurses5-dev libssl-dev libpcre3-dev libspeexdsp-dev \
     libspeex-dev libcurl4-openssl-dev libopus-dev libsqlite3-dev libldns-dev libedit-dev \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
+    libevent-dev \
     libsndfile1-dev \
     # UniMRCP 依赖（APR/APR-Util/Expat）
     libapr1-dev libaprutil1-dev libexpat1-dev \
@@ -261,6 +265,17 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then \
     else \
         ldconfig; \
     fi
+
+# 编译安装 mod_audio_stream（默认启用，用于 WebSocket 实时音频流）
+RUN git clone --depth 1 --branch ${MOD_AUDIO_STREAM_REF} https://github.com/amigniter/mod_audio_stream.git && \
+    cd mod_audio_stream && \
+    git submodule update --init --recursive && \
+    export PKG_CONFIG_PATH=${FREESWITCH_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-} && \
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -- -j"$(nproc)" && \
+    cmake --install build && \
+    if [ "$(uname -m)" = "aarch64" ]; then echo "Skipping ldconfig under arm64 buildx/QEMU"; else ldconfig; fi && \
+    cd /root && rm -rf mod_audio_stream
 
 # UniMRCP 构建选项（默认禁用，启用需传 --build-arg BUILD_UNIMRCP=1）
 # 使用系统 APR/APR-Util（由 apt libapr1-dev/libaprutil1-dev 提供）。

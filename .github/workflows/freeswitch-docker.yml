@@ -18,6 +18,10 @@ on:
         description: 'FreeSWITCH version to build (e.g., 1.10.12)'
         required: true
         default: '1.10.12'
+      mod_audio_stream_ref:
+        description: 'mod_audio_stream git ref (branch, tag, or commit SHA)'
+        required: true
+        default: 'main'
       push_to_registry:
         description: 'Push to Docker registries'
         required: true
@@ -126,4 +130,5 @@ jobs:
             BUILD_SIGNALWIRE=0
             INSTALL_SOUNDS=basic
             ENABLE_VIDEO=1
+            MOD_AUDIO_STREAM_REF=${{ github.event.inputs.mod_audio_stream_ref || 'main' }}
             BUILD_UNIMRCP=1

@@ -27,6 +27,7 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - ✅ MySQL/MariaDB database support
 - ✅ PostgreSQL database support
 - ✅ WebRTC support via SIP.js + mod_sofia
+- ✅ WebSocket audio streaming via mod_audio_stream
 - ✅ Video call support (VP8/VP9/H264)
 - ✅ Basic audio files included (8kHz)
 - ✅ SIP TLS encryption support
@@ -228,6 +229,71 @@ Dialplan example:
     <action application="log" data="INFO ASR result: ${detect_speech_result}"/>
   </condition>
 </extension>
+```
+
+### WebSocket Audio Streaming (mod_audio_stream)
+
+- The image now builds and loads `mod_audio_stream` by default.
+- This module is intended for real-time audio streaming between FreeSWITCH and external WebSocket services such as ASR, AI agents, TTS pipelines, or custom media processors.
+- The Docker build uses `MOD_AUDIO_STREAM_REF` to select the upstream git ref. The default value is `main`.
+
+Recommended versioning strategy:
+
+- For development or upstream tracking, keep `MOD_AUDIO_STREAM_REF=main`
+- For staging or production, pin to a tested tag or commit SHA for reproducible builds
+
+Build examples:
+
+```bash
+# Pin to a release tag
+docker build -f docker/Dockerfile docker \
+  --build-arg MOD_AUDIO_STREAM_REF=v1.0.0 \
+  -t bytedesk/freeswitch:mod-audio-stream
+
+# Pin to a commit
+docker build -f docker/Dockerfile docker \
+  --build-arg MOD_AUDIO_STREAM_REF=ec2a781 \
+  -t bytedesk/freeswitch:mod-audio-stream
+```
+
+Verify the module inside a running container:
+
+```bash
+docker exec -it freeswitch fs_cli -x "show modules like audio_stream"
+```
+
+If the output contains `mod_audio_stream`, the module was installed and loaded successfully.
+
+Dialplan example (minimal — starts streaming on answer):
+
+```xml
+<extension name="audio_stream_demo">
+  <condition field="destination_number" expression="^9002$">
+    <action application="answer"/>
+    <action application="sleep" data="500"/>
+    <!--
+      mix-type: mono | mixed | stereo
+      sampling-rate: 8k | 16k
+      metadata (optional): valid UTF-8 text sent before audio
+    -->
+    <action application="set"
+            data="stream_result=${expand(api uuid_audio_stream ${uuid} start ws://your-server:8080/stream mixed 8k hello_from_freeswitch)}"/>
+    <action application="log" data="INFO audio_stream started: ${stream_result}"/>
+  </condition>
+</extension>
+```
+
+fs_cli / ESL example (start, send text, stop):
+
+```bash
+# Start streaming
+fs_cli -x "uuid_audio_stream <uuid> start ws://your-server:8080/stream mixed 8k"
+
+# Send text mid-stream
+fs_cli -x "uuid_audio_stream <uuid> send_text a text message"
+
+# Stop
+fs_cli -x "uuid_audio_stream <uuid> stop"
 ```
 
 #### Important: Configuration Path Information
