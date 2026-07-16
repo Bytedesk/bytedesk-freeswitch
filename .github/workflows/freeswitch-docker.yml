@@ -132,3 +132,50 @@ jobs:
             ENABLE_VIDEO=1
             MOD_AUDIO_STREAM_REF=${{ github.event.inputs.mod_audio_stream_ref || 'main' }}
             BUILD_UNIMRCP=1
+
+      # 8. 生成 Release Notes
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          cat << 'EOF' > /tmp/release_notes.md
+          ## 🐳 Docker Images
+
+          | Registry | Image |
+          |----------|-------|
+          | Docker Hub | `${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}` |
+          | Docker Hub | `${{ env.IMAGE_NAME }}:latest` |
+          | 阿里云 | `${{ env.ALIYUN_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}` |
+          | 阿里云 | `${{ env.ALIYUN_IMAGE_NAME }}:latest` |
+
+          ### 拉取镜像
+
+          ```bash
+          # Docker Hub
+          docker pull ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+
+          # 阿里云
+          docker pull ${{ env.ALIYUN_IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          ```
+
+          ### 支持的架构
+
+          - `linux/amd64`
+          - `linux/arm64`
+
+          ### 构建信息
+
+          - **FreeSWITCH 版本**: ${{ env.FREESWITCH_VERSION }}
+          - **Commit SHA**: `${{ github.sha }}`
+          - **构建时间**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          EOF
+
+      # 9. 创建 GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: FreeSWITCH ${{ steps.version.outputs.VERSION }}
+          body_path: /tmp/release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
