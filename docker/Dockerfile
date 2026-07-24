@@ -65,6 +65,8 @@ RUN apt-get update && apt-get upgrade -y && \
     pkg-config uuid-dev yasm cmake libtiff-dev libpq-dev curl wget ca-certificates \
     libevent-dev \
     libsndfile1-dev \
+    # mod_shout 依赖（Icecast/MP3 流媒体支持）
+    libshout3-dev libmpg123-dev libvorbis-dev \
     # UniMRCP 依赖（APR/APR-Util/Expat）
     libapr1-dev libaprutil1-dev libexpat1-dev \
     liblua5.3-dev lua5.3 \
@@ -201,6 +203,8 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
     sed -i 's/^#\(applications\/mod_nibblebill\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_easyroute\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_spy\)/\1/' build/modules.conf.in && \
+    # 启用 mod_shout（Icecast/MP3 流媒体支持）
+    sed -i 's/^#\(applications\/mod_shout\)/\1/' build/modules.conf.in && \
     # 启用强烈推荐的呼叫中心模块
     sed -i 's/^#\(applications\/mod_avmd\)/\1/' build/modules.conf.in && \
     sed -i 's/^#\(applications\/mod_directory\)/\1/' build/modules.conf.in && \

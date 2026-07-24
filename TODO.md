@@ -15,4 +15,5 @@ GitHub.
 - [x] 能否修改为在编译 FreeSWITCH 的时候，直接将 mrcp_server_baidu 下载并打包到镜像中（已实现：Dockerfile 构建期通过 BAIDU_MRCP_URL 下载并解压，入口脚本仅负责启动）
 - [] 没有目录 /opt/mrcp/baidu/，存在目录 /opt/mrcp/baidu/MRCPServer/mrcp-server/logs，但文件夹中没有发现log文件
 - [] 另外教我如何查看docker容器内端口是否存在的命令
-- [] 参考 [github](https://github.com/amigniter/mod_audio_stream) 仓库，给当前 freeswitch 镜像添加默认编译支持 mod_audio_stream
+- [x] 参考 [github](https://github.com/amigniter/mod_audio_stream) 仓库，给当前 freeswitch 镜像添加默认编译支持 mod_audio_stream
+- [] 默认增加支持开启 mod_shout 模块编译，并在 modules.conf.xml 中默认开启 mod_shout 模块支持
