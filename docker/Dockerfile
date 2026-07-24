@@ -66,7 +66,7 @@ RUN apt-get update && apt-get upgrade -y && \
     libevent-dev \
     libsndfile1-dev \
     # mod_shout 依赖（Icecast/MP3 流媒体支持）
-    libshout3-dev libmpg123-dev libvorbis-dev \
+    libshout3-dev libmpg123-dev libvorbis-dev libmp3lame-dev \
     # UniMRCP 依赖（APR/APR-Util/Expat）
     libapr1-dev libaprutil1-dev libexpat1-dev \
     liblua5.3-dev lua5.3 \
