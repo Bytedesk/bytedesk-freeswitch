@@ -28,6 +28,7 @@
 - ✅ 支持 PostgreSQL 数据库
 - ✅ 支持 WebRTC（通过 SIP.js + mod_sofia）
 - ✅ 默认支持 mod_audio_stream WebSocket 音频流
+- ✅ 默认支持 mod_shout Icecast/MP3 流媒体
 - ✅ 支持视频通话（VP8/VP9/H264）
 - ✅ 包含基础音频文件（8kHz）
 - ✅ 支持 SIP TLS 加密

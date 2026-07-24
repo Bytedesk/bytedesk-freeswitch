@@ -28,6 +28,7 @@ FreeSWITCH 1.10.12 Docker image for ByteDesk Call Center System, based on Ubuntu
 - ✅ PostgreSQL database support
 - ✅ WebRTC support via SIP.js + mod_sofia
 - ✅ WebSocket audio streaming via mod_audio_stream
+- ✅ Icecast/MP3 streaming via mod_shout
 - ✅ Video call support (VP8/VP9/H264)
 - ✅ Basic audio files included (8kHz)
 - ✅ SIP TLS encryption support
