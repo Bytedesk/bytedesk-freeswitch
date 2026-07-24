@@ -219,9 +219,7 @@ RUN git clone -b ${FREESWITCH_VERSION} https://github.com/signalwire/freeswitch.
         echo "Configuring with video support (VP8/VP9/H264)..."; \
         ./configure --prefix=${FREESWITCH_PREFIX} \
                     --enable-core-odbc-support \
-                    --enable-core-pgsql-support \
-                    --with-vpx \
-                    --with-openh264; \
+                    --enable-core-pgsql-support; \
     else \
         echo "Configuring without video support..."; \
         ./configure --prefix=${FREESWITCH_PREFIX} \
